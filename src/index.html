@@ -2,9 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pathfinding Visualizer</title>
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- <link rel="shortcut icon" type="image/png" href=""/> -->
 </head>
 <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <nav id="nav">
+        <ul class="navbar-nav">
+            <li>
+                <a id="refreshButton" class="container-title">Pathfinding Visualizer</a>
+            </li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-id="dropdown" href="#">
+                    Algorithms
+                </a>
+                <ul class="dropdown-menu">
+                    <li id="startButtonDijkstra" class="navbar-drop-item">Dijkstra</li>
+                    <li id="startButtonAlgo2" class="navbar-drop-item">Algo 2</li>
+                    <li id="startButtonAlgo3" class="navbar-drop-item">Algo 3</li>
+                </ul>
+            </li>
 
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-id="dropdown" href="#">
+                    Terrain
+                    <span class="caret-down"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li id="createRandomTerrain" class="navbar-drop-item">Random Terrain</li>
+                    <li id="createMaze" class="navbar-drop-item">Recursive Division</li>
+                    <li id="createPattern" class="navbar-drop-item">Predefined Pattern</li>
+                </ul>
+            </li>
+
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-id="dropdown" href="#">
+                    Node Type
+                </a>
+                <ul class="dropdown-menu">
+                    <li id="wall" class="navbar-drop-item">Wall</li>
+                    <li id="water" class="navbar-drop-item">Water</li>
+                    <li id="grass" class="navbar-drop-item">Grass</li>
+                </ul>
+            </li>
+
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-id="dropdown" href="#">
+                    Clear
+                </a>
+                <ul class="dropdown-menu">
+                    <li id="clearBoard" class="navbar-drop-item">Clear Board</li>
+                    <li id="clearWalls" class="navbar-drop-item">Clear Walls</li>
+                    <li id="clearWeights" class="navbar-drop-item">Clear Weights</li>
+                    <li id="clearPath" class="navbar-drop-item">Clear Path</li>
+                </ul>
+            </li>
+
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-id="dropdown" href="#">
+                    Speed
+                </a>
+                <ul class="dropdown-menu">
+                    <li id="fast" class="navbar-drop-item">Fast</li>
+                    <li id="medium" class="navbar-drop-item">Medium</li>
+                    <li id="slow" class="navbar-drop-item">Slow</li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
 </body>
 </html>
