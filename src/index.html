@@ -14,18 +14,24 @@
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <nav id="nav">
+        <div class="navbar-header">
+            <a id="refreshButton" class="container-title">Pathfinding Visualizer</a>
+        </div>
         <ul class="navbar-nav">
-            <li>
-                <a id="refreshButton" class="container-title">Pathfinding Visualizer</a>
-            </li>
             <li class="dropdown">
                 <a class="dropdown-toggle" data-id="dropdown" href="#">
                     Algorithms
                 </a>
-                <ul class="dropdown-menu">
-                    <li id="startButtonDijkstra" class="navbar-drop-item">Dijkstra</li>
-                    <li id="startButtonAlgo2" class="navbar-drop-item">Algo 2</li>
-                    <li id="startButtonAlgo3" class="navbar-drop-item">Algo 3</li>
+                <ul class="dropdown-content">
+                    <li id="startButtonDijkstra" class="navbar-drop-item">
+                        <a href="#">Dijkstra</a>
+                    </li>
+                    <li id="startButtonAlgo2" class="navbar-drop-item">
+                        <a href="#">Algo 2</a>
+                    </li>
+                    <li id="startButtonAlgo3" class="navbar-drop-item">
+                        <a href="#">Algo 3</a>
+                    </li>
                 </ul>
             </li>
 
@@ -34,10 +40,16 @@
                     Terrain
                     <span class="caret-down"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li id="createRandomTerrain" class="navbar-drop-item">Random Terrain</li>
-                    <li id="createMaze" class="navbar-drop-item">Recursive Division</li>
-                    <li id="createPattern" class="navbar-drop-item">Predefined Pattern</li>
+                <ul class="dropdown-content">
+                    <li id="createRandomTerrain" class="navbar-drop-item">
+                        <a href="#">Random Terrain</a>
+                    </li>
+                    <li id="createMaze" class="navbar-drop-item">
+                        <a href="#">Recursive Division</a>
+                    </li>
+                    <li id="createPattern" class="navbar-drop-item">
+                        <a href="#">Predefined Pattern</a>
+                    </li>
                 </ul>
             </li>
 
@@ -45,10 +57,16 @@
                 <a class="dropdown-toggle" data-id="dropdown" href="#">
                     Node Type
                 </a>
-                <ul class="dropdown-menu">
-                    <li id="wall" class="navbar-drop-item">Wall</li>
-                    <li id="water" class="navbar-drop-item">Water</li>
-                    <li id="grass" class="navbar-drop-item">Grass</li>
+                <ul class="dropdown-content">
+                    <li id="wall" class="navbar-drop-item">
+                        <a href="#">Wall</a>
+                    </li>
+                    <li id="water" class="navbar-drop-item">
+                        <a href="#">Water</a>
+                    </li>
+                    <li id="grass" class="navbar-drop-item">
+                        <a href="#">Grass</a>
+                    </li>
                 </ul>
             </li>
 
@@ -56,11 +74,19 @@
                 <a class="dropdown-toggle" data-id="dropdown" href="#">
                     Clear
                 </a>
-                <ul class="dropdown-menu">
-                    <li id="clearBoard" class="navbar-drop-item">Clear Board</li>
-                    <li id="clearWalls" class="navbar-drop-item">Clear Walls</li>
-                    <li id="clearWeights" class="navbar-drop-item">Clear Weights</li>
-                    <li id="clearPath" class="navbar-drop-item">Clear Path</li>
+                <ul class="dropdown-content">
+                    <li id="clearBoard" class="navbar-drop-item">
+                        <a href="#">Clear Board</a>
+                    </li>
+                    <li id="clearWalls" class="navbar-drop-item">
+                        <a href="#">Clear Walls</a>
+                    </li>
+                    <li id="clearWeights" class="navbar-drop-item">
+                        <a href="#">Clear Weights</a>
+                    </li>
+                    <li id="clearPath" class="navbar-drop-item">
+                        <a href="#">Clear Path</a>
+                    </li>
                 </ul>
             </li>
 
@@ -68,10 +94,16 @@
                 <a class="dropdown-toggle" data-id="dropdown" href="#">
                     Speed
                 </a>
-                <ul class="dropdown-menu">
-                    <li id="fast" class="navbar-drop-item">Fast</li>
-                    <li id="medium" class="navbar-drop-item">Medium</li>
-                    <li id="slow" class="navbar-drop-item">Slow</li>
+                <ul class="dropdown-content">
+                    <li id="fast" class="navbar-drop-item">
+                        <a href="#">Fast</a>
+                    </li>
+                    <li id="medium" class="navbar-drop-item">
+                        <a href="#">Medium</a>
+                    </li>
+                    <li id="slow" class="navbar-drop-item">
+                        <a href="#">Slow</a>
+                    </li>
                 </ul>
             </li>
         </ul>

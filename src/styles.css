@@ -1,7 +1,7 @@
 body{
     font-family: sans-serif;
     font-size: 18px;
-    line-height: 1;
+    line-height: 1.75;
     color: rgba(255,255,255, 0.85);
     margin: 0;
 }
@@ -11,19 +11,20 @@ nav {
     width: 100%;
     top: 0;
     background: darkblue;
+    padding-left: 21px;
+    padding-right: 21px;
 }
 
 ul {
     position: relative;
     margin: 0;
     z-index: 2;
-    text-transform: uppercase;
     text-align: center;
 }
 
 li {
     display: inline-block;
-    padding: 1.35em 0;
+    /*padding: 1.35em 0;*/
     margin-right: 3em;
     font-size: 0.9em;
 }
@@ -41,16 +42,35 @@ a {
 .dropdown-content {
     display: block;
     position: absolute;
+    padding: 3px 4px;
+    margin-top: 5px;
     background-color: darkblue;
-    min-width: 160px;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    min-width: 100%;
+    border-radius: 4px;
     z-index: 1;
+    top: 100%;
 }
 
 .navbar-drop-item {
     text-align: left;
+    margin-right: 0;
     color: rgba(255,255,255, 0.8);
-    padding: 12px 16px;
+    padding: 12px 24px;
     text-decoration: none;
-    display: none;
+    display: block;
+}
+
+.navbar-nav {
+    margin: 0;
+    float: left;
+}
+
+.navbar-header {
+    font-size: 1.6em;
+    float: left;
+}
+
+.navbar-nav > li {
+    padding: 15px 21px;
+    line-height: 23px;
 }
