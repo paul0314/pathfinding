@@ -42,13 +42,13 @@ a {
 .dropdown-content {
     display: block;
     position: absolute;
-    padding: 3px 4px;
     margin-top: 5px;
     background-color: darkblue;
     min-width: 100%;
     border-radius: 4px;
     z-index: 1;
     top: 100%;
+    padding-left: 0;
 }
 
 .navbar-drop-item {
@@ -75,4 +75,12 @@ a {
 .navbar-nav > li {
     padding: 15px 21px;
     line-height: 23px;
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
 }
