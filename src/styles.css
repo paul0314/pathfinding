@@ -7,13 +7,13 @@ body{
 }
 
 nav {
-    position: fixed;
+    display: flex;
     width: 100%;
     color: rgba(255,255,255, 0.85);
-    top: 0;
     background: darkblue;
     padding-left: 21px;
     padding-right: 21px;
+    margin-bottom: 30px;
 }
 
 ul {
@@ -87,4 +87,10 @@ a {
 
 #refreshButton{
     font-weight: bold;
+}
+
+#grid{
+    position: absolute;
+    box-sizing: border-box;
+    z-index: 1;
 }
