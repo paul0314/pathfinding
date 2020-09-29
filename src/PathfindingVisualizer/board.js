@@ -1,4 +1,5 @@
 const grid = document.getElementById("table-grid");
+const nav = document.getElementById("nav");
 
 class Node{
     constructor(id, status){
@@ -41,6 +42,34 @@ class Grid{
         }
         grid.innerHTML = tableHTML;
     }
+
+    addEventListeners(){
+        for(let row = 0; row < this.height; row++){
+            for(let col = 0; col < this.width; col++){
+                let currId = `${row}-${col}`;
+                let currNode = this.getNode(currId);
+                let currHTMLElement = document.getElementById(currId);
+                currHTMLElement.addEventListener("mousedown", function () {
+
+                });
+                currHTMLElement.addEventListener("mouseup", function () {
+
+                });
+                currHTMLElement.addEventListener("mouseenter", function () {
+
+                });
+                currHTMLElement.addEventListener("mouseleave", function () {
+
+                });
+            }
+        }
+    }
+
+    getNode(id){
+        let splitId = id.split("-");
+        return this.board[splitId[0]][splitId[1]];
+    }
+
     set setStart(startId){
         let splitId = startId.split("-");
         if(splitId[0] >= this.height){
@@ -69,8 +98,10 @@ class Grid{
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const grid = new Grid(15,30);
+    const navHeight = nav.getBoundingClientRect().height;
+    const grid = new Grid(Math.floor((window.innerHeight - navHeight - 42) / 26.5),Math.floor(window.innerWidth / 26.5));
     grid.createGrid();
-    grid.setEnd = "10-25";
-    grid.setStart = "4-4";
+    grid.setEnd = `${Math.floor(grid.height * 3 / 4)}-${Math.floor(grid.width * 3 / 4)}`;
+    grid.setStart = `${Math.floor(grid.height / 4)}-${Math.floor(grid.width / 4)}`;
+    grid.addEventListener();
 });

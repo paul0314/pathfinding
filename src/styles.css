@@ -52,8 +52,9 @@ a {
 }
 
 .navbar-drop-item {
-    float: left;
+    /*overflow float unnötig?*/
     overflow: hidden;
+    float: left;
     white-space: nowrap;
     text-align: left;
     margin-right: 0;
@@ -82,7 +83,7 @@ a {
 }
 
 .dropdown-toggle{
-    font-weight: 550;
+    font-weight: 600;
 }
 
 #refreshButton{
@@ -91,6 +92,7 @@ a {
 
 .unvisited{
     border: 1px solid lightskyblue;
+    padding: 0;
     background-color: white;
 }
 
@@ -110,6 +112,12 @@ a {
     position: absolute;
     box-sizing: border-box;
     z-index: 1;
+}
+
+#table-grid {
+    margin-left: 5px;
+    margin-right: 5px;
+    border-spacing: 0;
 }
 
 #table-grid td {
