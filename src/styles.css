@@ -89,8 +89,30 @@ a {
     font-weight: bold;
 }
 
+.unvisited{
+    border: 1px solid lightskyblue;
+    background-color: white;
+}
+
+.wall {
+    background-color: black;
+}
+
+.start {
+    background-color: yellow;
+}
+
+.end {
+    background-color: green;
+}
+
 #grid{
     position: absolute;
     box-sizing: border-box;
     z-index: 1;
+}
+
+#table-grid td {
+    width: 25px;
+    height: 25px;
 }
