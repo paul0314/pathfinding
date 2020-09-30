@@ -63,11 +63,12 @@ class Grid{
                 }
                 previousElement.className = "unvisited";
                 node.status = this.prevNode.status;
+                this.prevNode.status = "normal";
             }
         }
     }
 
-    /*changeSpecialNodes muss auch beim Verlassen eines Knotens aufgerufen werden*/
+    /*still to fix: Wechsel zwischen Start und End beim Überlappen*/
 
     changeNormalNodes(node){
         let element = document.getElementById(node.id);
@@ -89,7 +90,7 @@ class Grid{
                     e.preventDefault();
                     parGrid.mouseDown = true;
                     parGrid.pressedNodeStatus = currNode.status;
-                    parGrid.prevNode = currNode;
+                    parGrid.prevNode = parGrid.getNode(currId);
                     if(currNode.status === "normal"){
                         parGrid.changeNormalNodes(currNode);
                     }
