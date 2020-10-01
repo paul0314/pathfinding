@@ -90,6 +90,20 @@ a {
     font-weight: bold;
 }
 
+.visited {
+    background-color: orange;
+    border: 1px solid lightskyblue;
+    padding: 0;
+}
+
+/*current, visitedStartNodeBlue, startTransparent, shortestPathRight*/
+
+.shortestPath {
+    background-color: purple;
+    border: 1px solid lightskyblue;
+    padding: 0;
+}
+
 .unvisited{
     border: 1px solid lightskyblue;
     padding: 0;

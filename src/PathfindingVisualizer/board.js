@@ -1,12 +1,16 @@
-const grid = document.getElementById("table-grid");
+const gridHTML = document.getElementById("table-grid");
 const nav = document.getElementById("nav");
+const startBtn = document.getElementById("startButtonLI");
+let grid;
+
 
 class Node{
     constructor(id, status){
         this.id = id;
         this.status = status;
         this.previousNode = null;
-        this.distance = null;
+        this.distance = Infinity;
+        this.visited = false;
         this.weight = 0;
     }
 }
@@ -44,7 +48,7 @@ class Grid{
             this.board.push(currRow);
             tableHTML += `${rowHTML}</tr>`
         }
-        grid.innerHTML = tableHTML;
+        gridHTML.innerHTML = tableHTML;
     }
 
     changeSpecialNodes = function(node){
@@ -68,7 +72,13 @@ class Grid{
         }
     }
 
-    /*still to fix: Wechsel zwischen Start und End beim Überlappen*/
+    /*still to fix: Wechsel zwischen Start und End beim Überlappen
+    * PreviousNode Status merken und entsprechend setzen (statt, dass die einfach verschwinden,
+    * wenn man mit Start / End drüber fährt.
+    * reset function aufgerufen, wenn gebraucht
+    *
+    * Dijkstra: Es fehlen Wände / Gewichte
+    * */
 
     changeNormalNodes(node){
         let element = document.getElementById(node.id);
@@ -78,6 +88,16 @@ class Grid{
         element.classList.toggle("wall");
         element.classList.toggle("unvisited");
     }
+
+
+    visualizeDijkstra(){
+        const visitedNodesInOrder = dijkstra(this);
+        const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
+        //nodesInShortestPathOrder enthält nur den Endknoten
+
+        animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
+    }
+
 
     addEventListeners(){
         for(let row = 0; row < this.height; row++){
@@ -122,8 +142,7 @@ class Grid{
     }
 
     getNode(id){
-        let splitId = id.split("-");
-        return this.board[splitId[0]][splitId[1]];
+        return this.nodes[`${id}`];
     }
 
     set setStart(startId){
@@ -157,9 +176,122 @@ class Grid{
 
 document.addEventListener("DOMContentLoaded", function () {
     const navHeight = nav.getBoundingClientRect().height;
-    const grid = new Grid(Math.floor((window.innerHeight - navHeight - 42) / 26.5),Math.floor(window.innerWidth / 26.5));
+    grid = new Grid(Math.floor((window.innerHeight - navHeight - 42) / 26.5),Math.floor(window.innerWidth / 26.5));
     grid.createGrid();
     grid.setEnd = `${Math.floor(grid.height * 3 / 4)}-${Math.floor(grid.width * 3 / 4)}`;
     grid.setStart = `${Math.floor(grid.height / 4)}-${Math.floor(grid.width / 4)}`;
     grid.addEventListeners();
 });
+
+startBtn.addEventListener("click", function () {
+    grid.visualizeDijkstra();
+});
+
+
+
+/*Ab hier Dijkstra:
+Dijkstra currently without weight functionality*/
+
+function dijkstra (grid){
+    let startNode = grid.getNode(grid.start);
+    let finishNode = grid.getNode(grid.end);
+    const visitedNodesInOrder = [];
+    const unvisitedNodes = getAllNodes(grid);
+    for(const nodes of unvisitedNodes){
+        nodes.distance = Infinity;
+    }
+    startNode.distance = 0;
+    while(!!unvisitedNodes.length){
+        sortNodesByDistance(unvisitedNodes);
+        const closestNode = unvisitedNodes.shift();
+        if(closestNode.status === "wall") continue;
+        if(closestNode.distance === Infinity){
+            return visitedNodesInOrder;
+        }
+        closestNode.visited = true;
+        visitedNodesInOrder.push(closestNode);
+        if(closestNode === finishNode){
+            return visitedNodesInOrder;
+        }
+        updateUnvisitedNeighbors(closestNode, grid);
+    }
+}
+
+function getAllNodes(grid){
+    const nodes = [];
+    for(const row of grid.board){
+        for(const node of row){
+            nodes.push(node);
+        }
+    }
+    return nodes;
+}
+
+function sortNodesByDistance(nodes){
+    nodes.sort((nodeA, nodeB) => nodeA.distance - nodeB.distance);
+}
+
+function getUnvisitedNeighbors(node, grid){
+    const neighbors = [];
+    const coordinates = node.id.split("-");
+    const row = parseInt(coordinates[0]);
+    const col = parseInt(coordinates[1]);
+    if(row > 0){
+        neighbors.push(grid.getNode(`${row - 1}-${col}`));
+    }
+    if(col > 0){
+        neighbors.push(grid.getNode(`${row}-${col - 1}`));
+    }
+    if(row < grid.height - 1){
+        neighbors.push(grid.getNode(`${row + 1}-${col}`));
+    }
+    if(col < grid.width - 1){
+        neighbors.push(grid.getNode(`${row}-${col + 1}`));
+    }
+
+    return neighbors.filter(neighbor => !neighbor.visited);
+}
+
+function updateUnvisitedNeighbors(node, grid){
+    const unvisitedNeighbors = getUnvisitedNeighbors(node, grid);
+    for(const neighbor of unvisitedNeighbors){
+        neighbor.distance = node.distance + 1;
+        neighbor.previousNode = node;
+    }
+}
+
+function getNodesInShortestPathOrder(finishNode){
+    const nodesInShortestPathOrder = [];
+    let currentNode = grid.getNode(finishNode);
+    while (currentNode != null){
+        nodesInShortestPathOrder.unshift(currentNode);
+        currentNode = currentNode.previousNode;
+    }
+    return nodesInShortestPathOrder;
+}
+
+function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
+    for(let i = 0; i <= visitedNodesInOrder.length; i++){
+        if(i === visitedNodesInOrder.length){
+            setTimeout(() => {
+                this.animateShortestPath(nodesInShortestPathOrder);
+            }, 10 * i);
+            return;
+        }
+        setTimeout(() => {
+            const node = visitedNodesInOrder[i];
+            document.getElementById(node.id).className = "visited";
+        }, 10 * i);
+    }
+}
+
+function animateShortestPath(nodesInShortestPathOrder){
+    for(let i = 0; i < nodesInShortestPathOrder.length; i++){
+        setTimeout(() => {
+            const node = nodesInShortestPathOrder[i];
+            document.getElementById(node.id).className = "shortestPath";
+        }, 50 * i);
+    }
+}
+
+//end of dijkstra
