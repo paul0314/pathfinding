@@ -1,6 +1,10 @@
 const gridHTML = document.getElementById("table-grid");
 const nav = document.getElementById("nav");
 const startBtn = document.getElementById("startButtonLI");
+const clearBoard = document.getElementById("clearBoard");
+const clearWalls = document.getElementById("clearWalls");
+const clearPath = document.getElementById("clearPath");
+const clearWeights = document.getElementById("clearWeights");
 let grid;
 
 
@@ -77,13 +81,19 @@ class Grid{
     * wenn man mit Start / End drüber fährt.
     * reset function aufgerufen, wenn gebraucht
     *
-    * Dijkstra: Es fehlen Wände / Gewichte
+    * Dijkstra: Es fehlen Gewichte und neues Aufrufen beim Verschieben von Start / Ende
     * */
 
     changeNormalNodes(node){
         let element = document.getElementById(node.id);
         if(element.classList.contains("start") || element.classList.contains("end")){
             return;
+        }
+        if(node.status === "wall"){
+            node.status = "normal";
+        }
+        if(node.status === "normal"){
+            node.status = "wall";
         }
         element.classList.toggle("wall");
         element.classList.toggle("unvisited");
@@ -93,8 +103,6 @@ class Grid{
     visualizeDijkstra(){
         const visitedNodesInOrder = dijkstra(this);
         const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
-        //nodesInShortestPathOrder enthält nur den Endknoten
-
         animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
     }
 
@@ -145,6 +153,44 @@ class Grid{
         return this.nodes[`${id}`];
     }
 
+    clearPath(){
+        for(let row = 0; row < this.height; row++){
+            for(let col = 0; col < this.width; col++){
+                let parGrid = this;
+                let currId = `${row}-${col}`;
+                let currNode = parGrid.getNode(currId);
+                let currHTMLElement = document.getElementById(currId);
+                if(currNode.status === "normal"){
+                    currHTMLElement.className = "unvisited";
+                }
+            }
+        }
+    }
+
+    clearWeights(){}
+
+    clearBoard(){
+        let parGrid = this;
+        parGrid.clearWeights();
+        parGrid.clearPath();
+        parGrid.clearWalls();
+    }
+
+    clearWalls(){
+        for(let row = 0; row < this.height; row++){
+            for(let col = 0; col < this.width; col++){
+                let parGrid = this;
+                let currId = `${row}-${col}`;
+                let currNode = parGrid.getNode(currId);
+                let currHTMLElement = document.getElementById(currId);
+                if(currNode.status === "wall"){
+                    currNode.status = "normal";
+                    currHTMLElement.className = "unvisited";
+                }
+            }
+        }
+    }
+
     set setStart(startId){
         let splitId = startId.split("-");
         if(splitId[0] >= this.height){
@@ -181,6 +227,22 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.setEnd = `${Math.floor(grid.height * 3 / 4)}-${Math.floor(grid.width * 3 / 4)}`;
     grid.setStart = `${Math.floor(grid.height / 4)}-${Math.floor(grid.width / 4)}`;
     grid.addEventListeners();
+    clearBoard.addEventListener("click", function (e) {
+        e.currentTarget.parentElement.classList.remove("show-dropdown");
+        grid.clearBoard();
+    });
+    clearPath.addEventListener("click", function (e) {
+        e.currentTarget.parentElement.classList.remove("show-dropdown");
+        grid.clearPath();
+    });
+    clearWeights.addEventListener("click", function (e) {
+        e.currentTarget.parentElement.classList.remove("show-dropdown");
+        grid.clearWeights();
+    });
+    clearWalls.addEventListener("click", function (e) {
+        e.currentTarget.parentElement.classList.remove("show-dropdown");
+        grid.clearWalls();
+    });
 });
 
 startBtn.addEventListener("click", function () {
@@ -190,7 +252,8 @@ startBtn.addEventListener("click", function () {
 
 
 /*Ab hier Dijkstra:
-Dijkstra currently without weight functionality*/
+Dijkstra currently without weight functionality and end / start node not displayed properly
+evtl reset nodes funktion am anfang von dijkstra*/
 
 function dijkstra (grid){
     let startNode = grid.getNode(grid.start);
@@ -198,6 +261,7 @@ function dijkstra (grid){
     const visitedNodesInOrder = [];
     const unvisitedNodes = getAllNodes(grid);
     for(const nodes of unvisitedNodes){
+        nodes.visited = false;
         nodes.distance = Infinity;
     }
     startNode.distance = 0;
@@ -270,19 +334,18 @@ function getNodesInShortestPathOrder(finishNode){
     return nodesInShortestPathOrder;
 }
 
+//ab 0 beinhaltet Startknoten
 function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
-    for(let i = 0; i <= visitedNodesInOrder.length; i++){
-        if(i === visitedNodesInOrder.length){
-            setTimeout(() => {
-                this.animateShortestPath(nodesInShortestPathOrder);
-            }, 10 * i);
-            return;
-        }
+    for(let i = 0; i < visitedNodesInOrder.length; i++){
+
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
             document.getElementById(node.id).className = "visited";
         }, 10 * i);
     }
+    setTimeout(() => {
+        this.animateShortestPath(nodesInShortestPathOrder);
+    }, 10 * visitedNodesInOrder.length);
 }
 
 function animateShortestPath(nodesInShortestPathOrder){
