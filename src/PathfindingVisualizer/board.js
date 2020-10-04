@@ -119,7 +119,7 @@ class Grid{
                     parGrid.mouseDown = true;
                     parGrid.pressedNodeStatus = currNode.status;
                     parGrid.prevNode = parGrid.getNode(currId);
-                    if(currNode.status === "normal"){
+                    if(currNode.status === "normal" || currNode.status === "wall"){
                         parGrid.changeNormalNodes(currNode);
                     }
                 });
@@ -129,19 +129,26 @@ class Grid{
                     parGrid.prevNode = null;
                     parGrid.prevNodeStatus = null;
                 });
-                currHTMLElement.addEventListener("mouseenter", function () {
+                currHTMLElement.addEventListener("mouseenter", function (e) {
                     if(parGrid.mouseDown === true){
-                        if(parGrid.pressedNodeStatus === "normal"){
+                        //löschen??
+                        /*if(parGrid.prevNode){
+                            parGrid.nodes[parGrid.prevNode.id].status = parGrid.prevNodeStatus;
+                            const prevNodeHTML = document.getElementById(parGrid.prevNode.id);
+                            prevNodeHTML.className = parGrid.prevNodeStatus;
+                        }*/
+
+                        parGrid.prevNodeStatus = currNode.status;
+                        if(parGrid.pressedNodeStatus === "normal" || parGrid.pressedNodeStatus === "wall"){
                             parGrid.changeNormalNodes(currNode);
                         }
                         else{
                             parGrid.changeSpecialNodes(currNode);
                         }
-                        parGrid.prevNodeStatus = currNode.status;
                     }
                 });
                 currHTMLElement.addEventListener("mouseleave", function () {
-                    if(parGrid.mouseDown && parGrid.pressedNodeStatus !== "normal"){
+                    if(parGrid.mouseDown /*&& parGrid.pressedNodeStatus !== "normal" && parGrid.pressedNodeStatus !== "wall"*/){
                         parGrid.prevNode = parGrid.getNode(currId);
                     }
                 });
