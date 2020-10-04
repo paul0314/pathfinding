@@ -27,7 +27,7 @@ class Grid{
         this.end = null;
         this.board = [];
         this.nodes = {};
-        this.pressedNodeStatus = "normal";
+        this.pressedNodeStatus = "unvisited";
         this.lastUpdatedNode = null;
         this.mouseDown = false;
         this.keyDown = false;
@@ -35,7 +35,7 @@ class Grid{
         this.currentAlgo = null;
         this.speed = "fast";
         this.prevNode = null;
-        this.prevNodeStatus = null;
+        this.prevNodeStatus = "unvisited";
     }
     createGrid(){
         let tableHTML = "";
@@ -44,7 +44,7 @@ class Grid{
             let rowHTML = `<tr id="row ${row}">`;
             for(let col = 0; col < this.width; col++){
                 let idNewNode = `${row}-${col}`;
-                let newNode = new Node(idNewNode, "normal");
+                let newNode = new Node(idNewNode, "unvisited");
                 this.nodes[`${idNewNode}`] = newNode;
                 currRow.push(newNode);
                 rowHTML += `<td id="${idNewNode}" class="unvisited"></td>`;
@@ -58,20 +58,16 @@ class Grid{
     changeSpecialNodes = function(node){
         let parGrid = this;
         let element = document.getElementById(node.id);
-        let previousElement;
 
         if(this.prevNode){
-            previousElement = document.getElementById(this.prevNode.id);
             if(node.status !== "start" && node.status !== "end"){
-                if(this.prevNode.status === "start"){
+                if(this.pressedNodeStatus === "start"){
                     parGrid.setStart = node.id;
                 }
-                if(this.prevNode.status === "end"){
+                if(this.pressedNodeStatus === "end"){
                     parGrid.setEnd = node.id;
                 }
-                previousElement.className = "unvisited";
-                node.status = this.prevNode.status;
-                this.prevNode.status = "normal";
+                node.status = this.pressedNodeStatus;
             }
         }
     }
@@ -90,9 +86,9 @@ class Grid{
             return;
         }
         if(node.status === "wall"){
-            node.status = "normal";
+            node.status = "unvisited";
         }
-        if(node.status === "normal"){
+        if(node.status === "unvisited"){
             node.status = "wall";
         }
         element.classList.toggle("wall");
@@ -119,27 +115,20 @@ class Grid{
                     parGrid.mouseDown = true;
                     parGrid.pressedNodeStatus = currNode.status;
                     parGrid.prevNode = parGrid.getNode(currId);
-                    if(currNode.status === "normal" || currNode.status === "wall"){
+                    if(currNode.status === "unvisited" || currNode.status === "wall"){
                         parGrid.changeNormalNodes(currNode);
                     }
                 });
                 currHTMLElement.addEventListener("mouseup", function () {
                     parGrid.mouseDown = false;
-                    parGrid.pressedNodeStatus = "normal";
+                    parGrid.pressedNodeStatus = "unvisited";
                     parGrid.prevNode = null;
-                    parGrid.prevNodeStatus = null;
+                    parGrid.prevNodeStatus = "unvisited";
                 });
                 currHTMLElement.addEventListener("mouseenter", function (e) {
-                    if(parGrid.mouseDown === true){
-                        //löschen??
-                        /*if(parGrid.prevNode){
-                            parGrid.nodes[parGrid.prevNode.id].status = parGrid.prevNodeStatus;
-                            const prevNodeHTML = document.getElementById(parGrid.prevNode.id);
-                            prevNodeHTML.className = parGrid.prevNodeStatus;
-                        }*/
-
+                    if(parGrid.mouseDown){
                         parGrid.prevNodeStatus = currNode.status;
-                        if(parGrid.pressedNodeStatus === "normal" || parGrid.pressedNodeStatus === "wall"){
+                        if(parGrid.pressedNodeStatus === "unvisited" || parGrid.pressedNodeStatus === "wall"){
                             parGrid.changeNormalNodes(currNode);
                         }
                         else{
@@ -149,7 +138,11 @@ class Grid{
                 });
                 currHTMLElement.addEventListener("mouseleave", function () {
                     if(parGrid.mouseDown){
-                        parGrid.prevNode = parGrid.getNode(currId);
+                        if(parGrid.pressedNodeStatus === "end" || parGrid.pressedNodeStatus === "start"){
+                            currHTMLElement.className = parGrid.prevNodeStatus;
+                            currNode.status = parGrid.prevNodeStatus;
+                        }
+                        parGrid.prevNode = currNode;
                     }
                 });
             }
@@ -167,7 +160,7 @@ class Grid{
                 let currId = `${row}-${col}`;
                 let currNode = parGrid.getNode(currId);
                 let currHTMLElement = document.getElementById(currId);
-                if(currNode.status === "normal"){
+                if(currNode.status === "unvisited"){
                     currHTMLElement.className = "unvisited";
                 }
             }
@@ -191,7 +184,7 @@ class Grid{
                 let currNode = parGrid.getNode(currId);
                 let currHTMLElement = document.getElementById(currId);
                 if(currNode.status === "wall"){
-                    currNode.status = "normal";
+                    currNode.status = "unvisited";
                     currHTMLElement.className = "unvisited";
                 }
             }
