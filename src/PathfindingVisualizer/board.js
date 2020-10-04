@@ -148,7 +148,7 @@ class Grid{
                     }
                 });
                 currHTMLElement.addEventListener("mouseleave", function () {
-                    if(parGrid.mouseDown /*&& parGrid.pressedNodeStatus !== "normal" && parGrid.pressedNodeStatus !== "wall"*/){
+                    if(parGrid.mouseDown){
                         parGrid.prevNode = parGrid.getNode(currId);
                     }
                 });

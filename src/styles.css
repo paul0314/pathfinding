@@ -100,13 +100,14 @@ a {
 
 .shortestPath {
     background-color: purple;
+}
+
+td{
     border: 1px solid lightskyblue;
     padding: 0;
 }
 
 .unvisited{
-    border: 1px solid lightskyblue;
-    padding: 0;
     background-color: white;
 }
 
