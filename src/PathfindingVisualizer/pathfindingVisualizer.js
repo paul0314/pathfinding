@@ -13,3 +13,13 @@ dropdownBtns.forEach(function (item) {
         content.classList.toggle("show-dropdown");
     });
 });
+
+document.addEventListener("click", function (clicked) {
+    dropdownBtns.forEach(function (item) {
+        const parent = item.parentElement;
+        const content = parent.querySelector(".dropdown-content");
+        if(clicked.target !== item){
+            content.classList.remove("show-dropdown");
+        }
+    });
+});
