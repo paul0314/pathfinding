@@ -97,6 +97,7 @@ class Grid{
 
 
     visualizeDijkstra(){
+        this.clearPath();
         const visitedNodesInOrder = dijkstra(this);
         const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
         animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
@@ -199,9 +200,9 @@ class Grid{
         if(splitId[1] >= this.width){
             return;
         }
-        const start = document.getElementById(startId);
+        const startHTML = document.getElementById(startId);
         this.start = `${startId}`;
-        start.className = "start";
+        startHTML.className = "start";
         this.nodes[`${startId}`].status = "start";
     }
 
@@ -222,7 +223,9 @@ class Grid{
 
 document.addEventListener("DOMContentLoaded", function () {
     const navHeight = nav.getBoundingClientRect().height;
-    grid = new Grid(Math.floor((window.innerHeight - navHeight - 42) / 26.5),Math.floor(window.innerWidth / 26.5));
+    const height = Math.max(5, Math.floor((window.innerHeight - navHeight - 42) / 26.5));
+    const width = Math.max(10, Math.floor(window.innerWidth / 26.5));
+    grid = new Grid(height, width);
     grid.createGrid();
     grid.setEnd = `${Math.floor(grid.height * 3 / 4)}-${Math.floor(grid.width * 3 / 4)}`;
     grid.setStart = `${Math.floor(grid.height / 4)}-${Math.floor(grid.width / 4)}`;
@@ -336,7 +339,7 @@ function getNodesInShortestPathOrder(finishNode){
 
 //ab 0 beinhaltet Startknoten
 function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
-    for(let i = 0; i < visitedNodesInOrder.length; i++){
+    for(let i = 1; i < visitedNodesInOrder.length - 1; i++){
 
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
@@ -349,7 +352,7 @@ function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
 }
 
 function animateShortestPath(nodesInShortestPathOrder){
-    for(let i = 0; i < nodesInShortestPathOrder.length; i++){
+    for(let i = 1; i < nodesInShortestPathOrder.length - 1; i++){
         setTimeout(() => {
             const node = nodesInShortestPathOrder[i];
             document.getElementById(node.id).className = "shortestPath";

@@ -115,11 +115,34 @@ td{
     background-color: black;
 }
 
+.button {
+    background-color: limegreen;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+#startButtonLI {
+    padding: 2px 21px;
+}
+
 .start {
+    background-image: url("images/g81.png");
+    background-repeat: no-repeat;
+    background-position: center;
     background-color: yellow;
 }
 
 .end {
+    background-image: url("images/finish137.png");
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center;
     background-color: green;
 }
 
