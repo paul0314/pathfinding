@@ -90,25 +90,24 @@ a {
     font-weight: bold;
 }
 
-.visited {
-    background-color: orange;
+/*current, visitedStartNodeBlue, startTransparent, shortestPathRight*/
+
+td{
     border: 1px solid lightskyblue;
     padding: 0;
+    background-color: white;
 }
-
-/*current, visitedStartNodeBlue, startTransparent, shortestPathRight*/
 
 .shortestPath {
     background-color: purple;
 }
 
-td{
-    border: 1px solid lightskyblue;
-    padding: 0;
-}
-
 .unvisited{
     background-color: white;
+}
+
+.visited {
+    background-color: orange;
 }
 
 .wall {
@@ -132,18 +131,43 @@ td{
 }
 
 .start {
-    background-image: url("images/g81.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-color: yellow;
-}
-
-.end {
-    background-image: url("images/finish137.png");
+    background-image: url("images/start.svg");
+    background-size: contain;
     position: absolute;
     background-repeat: no-repeat;
     background-position: center;
-    background-color: green;
+}
+
+.end {
+    background-image: url("images/finish.svg");
+    background-size: contain;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.water{
+    background-image: url("images/waterdropSized.svg");
+    background-size: contain;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.flame{
+    background-image: url("images/flame.svg");
+    background-size: contain;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.sand{
+    background-image: url("images/sand.svg");
+    background-size: contain;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 #grid{
