@@ -93,14 +93,6 @@ class Grid{
                 }
                 node.type = parGrid.pressedNodeStatus;
             }
-            /*else{
-                if(parGrid.pressedNodeStatus === "start"){
-                    parGrid.setStart = parGrid.prevNode.id;
-                }
-                else if(parGrid.pressedNodeStatus === "end"){
-                    parGrid.setEnd = parGrid.prevNode.id;
-                }
-            }*/
         }
     }
 
@@ -143,6 +135,16 @@ class Grid{
                     }
                 });
                 currHTMLElement.addEventListener("mouseup", function () {
+                    if(currNode.type === "end" || currNode.type === "start"){
+                        if(currNode.type !== parGrid.pressedNodeStatus){
+                            if(parGrid.pressedNodeStatus === "start"){
+                                parGrid.setStart = parGrid.prevNode.id;
+                            }
+                            else if(parGrid.pressedNodeStatus === "end"){
+                                parGrid.setEnd = parGrid.prevNode.id;
+                            }
+                        }
+                    }
                     parGrid.mouseDown = false;
                     parGrid.pressedNodeStatus = "none";
                     parGrid.prevNode = null;
