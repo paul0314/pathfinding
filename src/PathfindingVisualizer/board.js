@@ -361,7 +361,7 @@ function getNodesInShortestPathOrder(finishNode){
 
 //ab 0 beinhaltet Startknoten
 function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
-    for(let i = 1; i < visitedNodesInOrder.length - 1; i++){
+    for(let i = 0; i < visitedNodesInOrder.length; i++){
 
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
@@ -374,7 +374,7 @@ function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
 }
 
 function animateShortestPath(nodesInShortestPathOrder){
-    for(let i = 1; i < nodesInShortestPathOrder.length - 1; i++){
+    for(let i = 0; i < nodesInShortestPathOrder.length; i++){
         setTimeout(() => {
             const node = nodesInShortestPathOrder[i];
             grid.changeNodeStatus(node, "shortestPath");
