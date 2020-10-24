@@ -133,7 +133,6 @@ td{
 .start {
     background-image: url("images/start.svg");
     background-size: contain;
-    position: absolute;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -141,7 +140,6 @@ td{
 .end {
     background-image: url("images/finish.svg");
     background-size: contain;
-    position: absolute;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -149,7 +147,6 @@ td{
 .water{
     background-image: url("images/waterdropSized.svg");
     background-size: contain;
-    position: absolute;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -157,7 +154,6 @@ td{
 .flame{
     background-image: url("images/flame.svg");
     background-size: contain;
-    position: absolute;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -165,7 +161,6 @@ td{
 .sand{
     background-image: url("images/sand.svg");
     background-size: contain;
-    position: absolute;
     background-repeat: no-repeat;
     background-position: center;
 }

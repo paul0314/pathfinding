@@ -9,9 +9,10 @@ let grid;
 
 
 class Node{
-    constructor(id, status){
+    constructor(id, status, type){
         this.id = id;
         this.status = status;
+        this.type = type;
         this.previousNode = null;
         this.distance = Infinity;
         this.visited = false;
@@ -27,7 +28,7 @@ class Grid{
         this.end = null;
         this.board = [];
         this.nodes = {};
-        this.pressedNodeStatus = "unvisited";
+        this.pressedNodeStatus = "none";
         this.lastUpdatedNode = null;
         this.mouseDown = false;
         this.keyDown = false;
@@ -35,7 +36,7 @@ class Grid{
         this.currentAlgo = null;
         this.speed = "fast";
         this.prevNode = null;
-        this.prevNodeStatus = "unvisited";
+        this.prevNodeStatus = "none";
         this.selectedNodeType = "wall";
     }
     createGrid(){
@@ -45,10 +46,10 @@ class Grid{
             let rowHTML = `<tr id="row ${row}">`;
             for(let col = 0; col < this.width; col++){
                 let idNewNode = `${row}-${col}`;
-                let newNode = new Node(idNewNode, "unvisited");
+                let newNode = new Node(idNewNode, "unvisited", "none");
                 this.nodes[`${idNewNode}`] = newNode;
                 currRow.push(newNode);
-                rowHTML += `<td id="${idNewNode}" class="unvisited"></td>`;
+                rowHTML += `<td id="${idNewNode}" class="unvisited none"></td>`;
             }
             this.board.push(currRow);
             tableHTML += `${rowHTML}</tr>`
@@ -56,43 +57,64 @@ class Grid{
         gridHTML.innerHTML = tableHTML;
     }
 
-    changeSpecialNodes = function(node){
-        let parGrid = this;
-        let element = document.getElementById(node.id);
+    changeNodeType(currNode, newType){
+        if(currNode.type !== newType){
+            let currHTMLElement = document.getElementById(currNode.id);
+            currHTMLElement.classList.add(newType);
+            currHTMLElement.classList.remove(`${currNode.type}`);
+            currNode.type = newType;
+        }
+    }
 
-        if(this.prevNode){
-            if(node.status !== "start" && node.status !== "end"){
-                if(this.pressedNodeStatus === "start"){
-                    parGrid.setStart = node.id;
-                }
-                if(this.pressedNodeStatus === "end"){
-                    parGrid.setEnd = node.id;
-                }
-                node.status = this.pressedNodeStatus;
+    changeNodeStatus(currNode, newStatus){
+        if(currNode.status !== newStatus){
+            let currHTMLElement = document.getElementById(currNode.id);
+            currHTMLElement.classList.remove(`${currNode.status}`);
+            currHTMLElement.classList.add(newStatus);
+            currNode.status = newStatus;
+            if(currNode.status === "visited"){
+                currNode.visited = true;
+            }
+            else if(currNode.status === "unvisited"){
+                currNode.visited = false;
             }
         }
     }
 
-    /*still to fix: Wechsel zwischen Start und End beim Überlappen
-    * PreviousNode Status merken und entsprechend setzen (statt, dass die einfach verschwinden,
-    * wenn man mit Start / End drüber fährt.
-    * reset function aufgerufen, wenn gebraucht
-    *
-    * Dijkstra: Es fehlen Gewichte und neues Aufrufen beim Verschieben von Start / Ende
-    * */
+    changeSpecialNodes = function(node){
+        let parGrid = this;
+        if(parGrid.prevNode){
+            if(node.type !== "start" && node.type !== "end"){
+                if(parGrid.pressedNodeStatus === "start"){
+                    parGrid.setStart = node.id;
+                }
+                if(parGrid.pressedNodeStatus === "end"){
+                    parGrid.setEnd = node.id;
+                }
+                node.type = parGrid.pressedNodeStatus;
+            }
+            /*else{
+                if(parGrid.pressedNodeStatus === "start"){
+                    parGrid.setStart = parGrid.prevNode.id;
+                }
+                else if(parGrid.pressedNodeStatus === "end"){
+                    parGrid.setEnd = parGrid.prevNode.id;
+                }
+            }*/
+        }
+    }
 
     changeNormalNodes(node){
-        let element = document.getElementById(node.id);
-        if(element.classList.contains("start") || element.classList.contains("end")){
+        let parGrid = this;
+        if(node.type === "start" || node.type === "end"){
             return;
         }
-        if(node.status !== this.selectedNodeType){
-            node.status = this.selectedNodeType;
+        if(node.type !== parGrid.selectedNodeType){
+            parGrid.changeNodeType(node, parGrid.selectedNodeType);
         }
         else{
-            node.status = "unvisited";
+            parGrid.changeNodeType(node, "none");
         }
-        element.className = node.status;
     }
 
 
@@ -114,21 +136,21 @@ class Grid{
                 currHTMLElement.addEventListener("mousedown", function (e) {
                     e.preventDefault();
                     parGrid.mouseDown = true;
-                    parGrid.pressedNodeStatus = currNode.status;
+                    parGrid.pressedNodeStatus = currNode.type;
                     parGrid.prevNode = parGrid.getNode(currId);
-                    if(currNode.status !== "end" && currNode.status !== "start"){
+                    if(currNode.type !== "end" && currNode.type !== "start"){
                         parGrid.changeNormalNodes(currNode);
                     }
                 });
                 currHTMLElement.addEventListener("mouseup", function () {
                     parGrid.mouseDown = false;
-                    parGrid.pressedNodeStatus = "unvisited";
+                    parGrid.pressedNodeStatus = "none";
                     parGrid.prevNode = null;
-                    parGrid.prevNodeStatus = "unvisited";
+                    parGrid.prevNodeStatus = "none";
                 });
                 currHTMLElement.addEventListener("mouseenter", function (e) {
                     if(parGrid.mouseDown){
-                        parGrid.prevNodeStatus = currNode.status;
+                        parGrid.prevNodeStatus = currNode.type;
                         if(parGrid.pressedNodeStatus !== "end" && parGrid.pressedNodeStatus !== "start"){
                             parGrid.changeNormalNodes(currNode);
                         }
@@ -140,8 +162,8 @@ class Grid{
                 currHTMLElement.addEventListener("mouseleave", function () {
                     if(parGrid.mouseDown){
                         if(parGrid.pressedNodeStatus === "end" || parGrid.pressedNodeStatus === "start"){
-                            currHTMLElement.className = parGrid.prevNodeStatus;
-                            currNode.status = parGrid.prevNodeStatus;
+                            parGrid.changeNodeType(currNode, parGrid.prevNodeStatus);
+                            currNode.type = parGrid.prevNodeStatus;
                         }
                         parGrid.prevNode = currNode;
                     }
@@ -160,10 +182,7 @@ class Grid{
                 let parGrid = this;
                 let currId = `${row}-${col}`;
                 let currNode = parGrid.getNode(currId);
-                let currHTMLElement = document.getElementById(currId);
-                if(currNode.status === "unvisited"){
-                    currHTMLElement.className = "unvisited";
-                }
+                parGrid.changeNodeStatus(currNode, "unvisited");
             }
         }
     }
@@ -183,11 +202,7 @@ class Grid{
                 let parGrid = this;
                 let currId = `${row}-${col}`;
                 let currNode = parGrid.getNode(currId);
-                let currHTMLElement = document.getElementById(currId);
-                currHTMLElement.classList.remove("shortestPath");
-                currHTMLElement.classList.remove("visited");
-                currHTMLElement.classList.add(`${currNode.status}`);
-                currNode.visited = false;
+                parGrid.changeNodeStatus(currNode, "unvisited");
                 currNode.previousNode = null;
                 currNode.distance = Infinity;
             }
@@ -200,16 +215,15 @@ class Grid{
                 let parGrid = this;
                 let currId = `${row}-${col}`;
                 let currNode = parGrid.getNode(currId);
-                let currHTMLElement = document.getElementById(currId);
-                if(currNode.status === "wall"){
-                    currNode.status = "unvisited";
-                    currHTMLElement.className = "unvisited";
+                if(currNode.type === "wall"){
+                    parGrid.changeNodeType(currNode, "none");
                 }
             }
         }
     }
 
     set setStart(startId){
+        let parGrid = this;
         let splitId = startId.split("-");
         if(splitId[0] >= this.height){
             return;
@@ -217,13 +231,12 @@ class Grid{
         if(splitId[1] >= this.width){
             return;
         }
-        const startHTML = document.getElementById(startId);
-        this.start = `${startId}`;
-        startHTML.className = "start";
-        this.nodes[`${startId}`].status = "start";
+        parGrid.changeNodeType(parGrid.getNode(startId), "start");
+        parGrid.start = `${startId}`;
     }
 
     set setEnd(endId){
+        let parGrid = this;
         let splitId = endId.split("-");
         if(splitId[0] >= this.height){
             return;
@@ -231,10 +244,8 @@ class Grid{
         if(splitId[1] >= this.width){
             return;
         }
-        const end = document.getElementById(endId);
-        this.end = `${endId}`;
-        end.className = "end";
-        this.nodes[`${endId}`].status = "end";
+        parGrid.changeNodeType(parGrid.getNode(endId), "end");
+        parGrid.end = `${endId}`;
     }
 }
 
@@ -271,25 +282,16 @@ startBtn.addEventListener("click", function () {
 });
 
 
-
-/*Ab hier Dijkstra:
-Dijkstra currently without weight functionality and end / start node not displayed properly
-evtl reset nodes funktion am anfang von dijkstra*/
-
 function dijkstra (grid){
     let startNode = grid.getNode(grid.start);
     let finishNode = grid.getNode(grid.end);
     const visitedNodesInOrder = [];
     const unvisitedNodes = getAllNodes(grid);
-    for(const nodes of unvisitedNodes){
-        nodes.visited = false;
-        nodes.distance = Infinity;
-    }
     startNode.distance = 0;
     while(!!unvisitedNodes.length){
         sortNodesByDistance(unvisitedNodes);
         const closestNode = unvisitedNodes.shift();
-        if(closestNode.status === "wall") continue;
+        if(closestNode.type === "wall") continue;
         if(closestNode.distance === Infinity){
             return visitedNodesInOrder;
         }
@@ -361,7 +363,7 @@ function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
 
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
-            document.getElementById(node.id).className = "visited";
+            grid.changeNodeStatus(node, "visited");
         }, 10 * i);
     }
     setTimeout(() => {
@@ -373,7 +375,7 @@ function animateShortestPath(nodesInShortestPathOrder){
     for(let i = 1; i < nodesInShortestPathOrder.length - 1; i++){
         setTimeout(() => {
             const node = nodesInShortestPathOrder[i];
-            document.getElementById(node.id).className = "shortestPath";
+            grid.changeNodeStatus(node, "shortestPath");
         }, 50 * i);
     }
 }
