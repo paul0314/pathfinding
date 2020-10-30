@@ -1,6 +1,6 @@
 body{
     font-family: sans-serif;
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1.75;
     color: black;
     margin: 0;
@@ -14,6 +14,7 @@ nav {
     padding-left: 21px;
     padding-right: 21px;
     margin-bottom: 30px;
+    text-transform: capitalize;
 }
 
 ul {
@@ -71,7 +72,9 @@ a {
 
 .navbar-header {
     font-size: 1.6em;
-    float: left;
+    display: grid;
+    justify-content: center;
+    align-items: center;
 }
 
 .navbar-nav > li {
@@ -119,16 +122,16 @@ td{
     background-color: limegreen;
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 14px 24px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 0.95em;
     border-radius: 6px;
 }
 
 #startButtonLI {
-    padding: 2px 21px;
+    padding: 5px 21px;
 }
 
 .start {

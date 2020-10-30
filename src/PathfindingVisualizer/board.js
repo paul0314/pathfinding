@@ -296,6 +296,7 @@ nodeType.addEventListener("click", function(e){
         eventEle = eventEle.parentElement;
     }
     grid.selectedNodeType = `${eventEle.dataset.id}`;
+    eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id}`;
 });
 
 speedDropdown.addEventListener("click", function (e) {
@@ -304,6 +305,7 @@ speedDropdown.addEventListener("click", function (e) {
         eventEle = eventEle.parentElement;
     }
     grid.speed = `${eventEle.dataset.id}`;
+    eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
 });
 
 function dijkstra (grid){
