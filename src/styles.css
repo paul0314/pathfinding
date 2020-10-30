@@ -38,18 +38,23 @@ a {
 .dropdown {
     position: relative;
     display: inline-block;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 }
 
 .dropdown-content {
     display: none;
     position: absolute;
-    margin-top: 5px;
+    left: 0;
+    /*margin-top: 5px;*/
     background-color: darkblue;
     min-width: 100%;
-    border-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
     z-index: 1;
     top: 100%;
     padding-left: 0;
+    box-shadow: 0px 10px 32px 2px rgba(0,0,0,0.2);
 }
 
 .navbar-drop-item {
@@ -93,8 +98,6 @@ a {
 #refreshButton{
     font-weight: bold;
 }
-
-/*current, visitedStartNodeBlue, startTransparent, shortestPathRight*/
 
 td{
     border: 1px solid lightskyblue;

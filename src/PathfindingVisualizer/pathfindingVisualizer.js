@@ -11,6 +11,12 @@ dropdownBtns.forEach(function (item) {
             }
         });
         content.classList.toggle("show-dropdown");
+        if(content.parentElement.style.backgroundColor === "limegreen"){
+            content.parentElement.style.backgroundColor = "darkblue";
+        }
+        else {
+            content.parentElement.style.backgroundColor = "limegreen";
+        }
     });
 });
 
@@ -20,6 +26,7 @@ document.addEventListener("click", function (clicked) {
         const content = parent.querySelector(".dropdown-content");
         if(clicked.target !== item){
             content.classList.remove("show-dropdown");
+            content.parentElement.style.backgroundColor = "darkblue";
         }
     });
 });
