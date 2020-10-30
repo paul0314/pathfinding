@@ -5,6 +5,12 @@ const clearBoard = document.getElementById("clearBoard");
 const clearWalls = document.getElementById("clearWalls");
 const clearPath = document.getElementById("clearPath");
 const clearWeights = document.getElementById("clearWeights");
+const nodeType = document.getElementById("nodeType");
+const speedDropdown = document.getElementById("speedDropdown");
+
+const weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
+const speed = {slow: 5, medium: 2, fast: 0.5}
+
 let grid;
 
 
@@ -34,7 +40,7 @@ class Grid{
         this.keyDown = false;
         this.algoDone = false;
         this.currentAlgo = null;
-        this.speed = "fast";
+        this.speed = "medium";
         this.prevNode = null;
         this.prevNodeStatus = "none";
         this.selectedNodeType = "wall";
@@ -63,6 +69,7 @@ class Grid{
             currHTMLElement.classList.add(newType);
             currHTMLElement.classList.remove(`${currNode.type}`);
             currNode.type = newType;
+            currNode.weight = weights[`${currNode.type}`];
         }
     }
 
@@ -283,6 +290,21 @@ startBtn.addEventListener("click", function () {
     grid.visualizeDijkstra();
 });
 
+nodeType.addEventListener("click", function(e){
+    let eventEle = e.target;
+    if(eventEle.nodeName === "A"){
+        eventEle = eventEle.parentElement;
+    }
+    grid.selectedNodeType = `${eventEle.dataset.id}`;
+});
+
+speedDropdown.addEventListener("click", function (e) {
+    let eventEle = e.target;
+    if(eventEle.nodeName === "A"){
+        eventEle = eventEle.parentElement;
+    }
+    grid.speed = `${eventEle.dataset.id}`;
+});
 
 function dijkstra (grid){
     let startNode = grid.getNode(grid.start);
@@ -344,7 +366,7 @@ function getUnvisitedNeighbors(node, grid){
 function updateUnvisitedNeighbors(node, grid){
     const unvisitedNeighbors = getUnvisitedNeighbors(node, grid);
     for(const neighbor of unvisitedNeighbors){
-        neighbor.distance = node.distance + 1;
+        neighbor.distance = node.distance + neighbor.weight + 1;
         neighbor.previousNode = node;
     }
 }
@@ -366,11 +388,13 @@ function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
             grid.changeNodeStatus(node, "visited");
-        }, 10 * i);
+        }, 10 * i * speed[`${grid.speed}`]);
     }
-    setTimeout(() => {
-        this.animateShortestPath(nodesInShortestPathOrder);
-    }, 10 * visitedNodesInOrder.length);
+    if(nodesInShortestPathOrder.length > 1){
+        setTimeout(() => {
+            this.animateShortestPath(nodesInShortestPathOrder);
+        }, 10 * speed[`${grid.speed}`] * visitedNodesInOrder.length);
+    }
 }
 
 function animateShortestPath(nodesInShortestPathOrder){
@@ -378,7 +402,7 @@ function animateShortestPath(nodesInShortestPathOrder){
         setTimeout(() => {
             const node = nodesInShortestPathOrder[i];
             grid.changeNodeStatus(node, "shortestPath");
-        }, 50 * i);
+        }, 50 * speed[`${grid.speed}`] * i);
     }
 }
 

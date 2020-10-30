@@ -61,6 +61,7 @@ a {
     color: rgba(255,255,255, 0.8);
     padding: 12px 24px;
     text-decoration: none;
+    width: calc(100% - 24px);
 }
 
 .navbar-nav {
@@ -151,7 +152,7 @@ td{
     background-position: center;
 }
 
-.flame{
+.fire{
     background-image: url("images/flame.svg");
     background-size: contain;
     background-repeat: no-repeat;
