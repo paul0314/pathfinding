@@ -1,6 +1,6 @@
 const gridHTML = document.getElementById("table-grid");
 const nav = document.getElementById("nav");
-const startBtn = document.getElementById("startButtonLI");
+const startBtn = document.getElementById("startButton");
 const clearBoard = document.getElementById("clearBoard");
 const clearWalls = document.getElementById("clearWalls");
 const clearPath = document.getElementById("clearPath");
@@ -37,8 +37,7 @@ class Grid{
         this.pressedNodeStatus = "none";
         this.lastUpdatedNode = null;
         this.mouseDown = false;
-        this.keyDown = false;
-        this.algoDone = false;
+        this.algoDone = true;
         this.currentAlgo = null;
         this.speed = "medium";
         this.prevNode = null;
@@ -118,6 +117,7 @@ class Grid{
 
 
     visualizeDijkstra(){
+        this.algoDone = false;
         this.clearPath();
         const visitedNodesInOrder = dijkstra(this);
         const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
@@ -134,31 +134,34 @@ class Grid{
                 let currHTMLElement = document.getElementById(currId);
                 currHTMLElement.addEventListener("mousedown", function (e) {
                     e.preventDefault();
-                    parGrid.mouseDown = true;
-                    parGrid.pressedNodeStatus = currNode.type;
-                    parGrid.prevNode = parGrid.getNode(currId);
-                    if(currNode.type !== "end" && currNode.type !== "start"){
-                        parGrid.changeNormalNodes(currNode);
+                    if(parGrid.algoDone){
+                        parGrid.mouseDown = true;
+                        parGrid.pressedNodeStatus = currNode.type;
+                        parGrid.prevNode = parGrid.getNode(currId);
+                        if(currNode.type !== "end" && currNode.type !== "start"){
+                            parGrid.changeNormalNodes(currNode);
+                        }
                     }
                 });
                 currHTMLElement.addEventListener("mouseup", function () {
-                    if(currNode.type === "end" || currNode.type === "start"){
-                        if(currNode.type !== parGrid.pressedNodeStatus){
-                            if(parGrid.pressedNodeStatus === "start"){
-                                parGrid.setStart = parGrid.prevNode.id;
-                            }
-                            else if(parGrid.pressedNodeStatus === "end"){
-                                parGrid.setEnd = parGrid.prevNode.id;
+                    if(parGrid.algoDone) {
+                        if (currNode.type === "end" || currNode.type === "start") {
+                            if (currNode.type !== parGrid.pressedNodeStatus) {
+                                if (parGrid.pressedNodeStatus === "start") {
+                                    parGrid.setStart = parGrid.prevNode.id;
+                                } else if (parGrid.pressedNodeStatus === "end") {
+                                    parGrid.setEnd = parGrid.prevNode.id;
+                                }
                             }
                         }
+                        parGrid.mouseDown = false;
+                        parGrid.pressedNodeStatus = "none";
+                        parGrid.prevNode = null;
+                        parGrid.prevNodeStatus = "none";
                     }
-                    parGrid.mouseDown = false;
-                    parGrid.pressedNodeStatus = "none";
-                    parGrid.prevNode = null;
-                    parGrid.prevNodeStatus = "none";
                 });
                 currHTMLElement.addEventListener("mouseenter", function (e) {
-                    if(parGrid.mouseDown){
+                    if(parGrid.mouseDown && parGrid.algoDone){
                         parGrid.prevNodeStatus = currNode.type;
                         if(parGrid.pressedNodeStatus !== "end" && parGrid.pressedNodeStatus !== "start"){
                             parGrid.changeNormalNodes(currNode);
@@ -169,7 +172,7 @@ class Grid{
                     }
                 });
                 currHTMLElement.addEventListener("mouseleave", function () {
-                    if(parGrid.mouseDown){
+                    if(parGrid.mouseDown && parGrid.algoDone){
                         if(parGrid.pressedNodeStatus === "end" || parGrid.pressedNodeStatus === "start"){
                             parGrid.changeNodeType(currNode, parGrid.prevNodeStatus);
                             currNode.type = parGrid.prevNodeStatus;
@@ -186,23 +189,43 @@ class Grid{
     }
 
     clearPath(){
-        for(let row = 0; row < this.height; row++){
-            for(let col = 0; col < this.width; col++){
-                let parGrid = this;
-                let currId = `${row}-${col}`;
-                let currNode = parGrid.getNode(currId);
-                parGrid.changeNodeStatus(currNode, "unvisited");
+        let parGrid = this;
+        if(parGrid.algoDone) {
+            for (let row = 0; row < this.height; row++) {
+                for (let col = 0; col < this.width; col++) {
+                    let parGrid = this;
+                    let currId = `${row}-${col}`;
+                    let currNode = parGrid.getNode(currId);
+                    parGrid.changeNodeStatus(currNode, "unvisited");
+                }
             }
         }
     }
 
-    clearWeights(){}
+    clearWeights(){
+        let parGrid = this;
+        if(parGrid.algoDone) {
+            const weightNodes = ["sand", "water", "fire"];
+            for (let row = 0; row < this.height; row++) {
+                for (let col = 0; col < this.width; col++) {
+                    let parGrid = this;
+                    let currId = `${row}-${col}`;
+                    let currNode = parGrid.getNode(currId);
+                    if (weightNodes.includes(currNode.type)) {
+                        parGrid.changeNodeType(currNode, "none");
+                    }
+                }
+            }
+        }
+    }
 
     clearBoard(){
         let parGrid = this;
-        parGrid.clearWeights();
-        parGrid.clearPath();
-        parGrid.clearWalls();
+        if(parGrid.algoDone){
+            parGrid.clearWeights();
+            parGrid.clearPath();
+            parGrid.clearWalls();
+        }
     }
 
     resetNodes(){
@@ -286,8 +309,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 startBtn.addEventListener("click", function () {
-    grid.resetNodes();
-    grid.visualizeDijkstra();
+    if(grid.algoDone){
+        grid.resetNodes();
+        grid.visualizeDijkstra();
+    }
 });
 
 nodeType.addEventListener("click", function(e){
@@ -383,15 +408,22 @@ function getNodesInShortestPathOrder(finishNode){
     return nodesInShortestPathOrder;
 }
 
-//ab 0 beinhaltet Startknoten
 function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
+    startBtn.style.backgroundColor = "red";
+    //after entire animation set algoDone to true
+    let duration = calculateDijkstraDuration(visitedNodesInOrder, nodesInShortestPathOrder);
+    setTimeout(() => {
+        grid.algoDone = true;
+        startBtn.style.backgroundColor = "limegreen";
+    }, duration);
+    //visitedNodes animation
     for(let i = 0; i < visitedNodesInOrder.length; i++){
-
         setTimeout(() => {
             const node = visitedNodesInOrder[i];
             grid.changeNodeStatus(node, "visited");
         }, 10 * i * speed[`${grid.speed}`]);
     }
+    //shortestPath animation (if path was found)
     if(nodesInShortestPathOrder.length > 1){
         setTimeout(() => {
             this.animateShortestPath(nodesInShortestPathOrder);
@@ -408,4 +440,10 @@ function animateShortestPath(nodesInShortestPathOrder){
     }
 }
 
+function calculateDijkstraDuration(visitedNodesInOrder, nodesInShortestPathOrder){
+    let duration = 0;
+    duration += visitedNodesInOrder.length * speed[`${grid.speed}`] * 10;
+    duration += nodesInShortestPathOrder.length * 50 * speed[`${grid.speed}`];
+    return duration;
+}
 //end of dijkstra
