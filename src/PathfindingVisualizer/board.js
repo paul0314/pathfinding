@@ -7,6 +7,7 @@ const clearPath = document.getElementById("clearPath");
 const clearWeights = document.getElementById("clearWeights");
 const nodeType = document.getElementById("nodeType");
 const speedDropdown = document.getElementById("speedDropdown");
+const selectAlgo = document.getElementById("selectAlgo");
 
 const weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
 const speed = {slow: 5, medium: 2, fast: 0.5}
@@ -38,7 +39,7 @@ class Grid{
         this.lastUpdatedNode = null;
         this.mouseDown = false;
         this.algoDone = true;
-        this.currentAlgo = null;
+        this.currentAlgo = "none";
         this.speed = "medium";
         this.prevNode = null;
         this.prevNodeStatus = "none";
@@ -115,13 +116,24 @@ class Grid{
         }
     }
 
-
-    visualizeDijkstra(){
+    visualizeAlgo(){
         this.algoDone = false;
         this.clearPath();
-        const visitedNodesInOrder = dijkstra(this);
+        let visitedNodesInOrder;
+        if(this.currentAlgo === "Dijkstra"){
+            visitedNodesInOrder = dijkstra(this);
+        }
+        else if(this.currentAlgo === "A* Euclidean"){
+            visitedNodesInOrder = aStar(this, "euclidean");
+        }
+        else if(this.currentAlgo === "A* Manhattan"){
+            visitedNodesInOrder = aStar(this, "manhattan");
+        }
+        else{
+            return;
+        }
         const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
-        animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
+        animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
     }
 
 
@@ -310,8 +322,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 startBtn.addEventListener("click", function () {
     if(grid.algoDone){
+        if(grid.currentAlgo === "none"){
+            startBtn.innerHTML = "Pick an Algorithm!";
+            return;
+        }
         grid.resetNodes();
-        grid.visualizeDijkstra();
+        grid.visualizeAlgo();
     }
 });
 
@@ -322,6 +338,15 @@ nodeType.addEventListener("click", function(e){
     }
     grid.selectedNodeType = `${eventEle.dataset.id}`;
     eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id}`;
+});
+
+selectAlgo.addEventListener("click", function (e) {
+    let eventEle = e.target;
+    if(eventEle.nodeName === "A"){
+        eventEle = eventEle.parentElement;
+    }
+    grid.currentAlgo = `${eventEle.dataset.id}`;
+    startBtn.innerHTML = `Visualize ${eventEle.dataset.id}!`;
 });
 
 speedDropdown.addEventListener("click", function (e) {
@@ -408,7 +433,7 @@ function getNodesInShortestPathOrder(finishNode){
     return nodesInShortestPathOrder;
 }
 
-function animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder){
+function animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder){
     startBtn.style.backgroundColor = "red";
     //after entire animation set algoDone to true
     let duration = calculateDijkstraDuration(visitedNodesInOrder, nodesInShortestPathOrder);
@@ -447,3 +472,104 @@ function calculateDijkstraDuration(visitedNodesInOrder, nodesInShortestPathOrder
     return duration;
 }
 //end of dijkstra
+
+//start of a*
+
+function aStar (grid, distanceMeasure){
+    let startNode = grid.getNode(grid.start);
+    let finishNode = grid.getNode(grid.end);
+    const openList = [];
+    const visitedNodesInOrder = [];
+    openList.push(grid.getNode(grid.start));
+    startNode.distance = 0;
+    while(!!openList.length){
+        sortNodesAStar(openList, distanceMeasure);
+        const currNode = openList.shift();
+        visitedNodesInOrder.push(currNode);
+        if(currNode.type === "wall") continue;
+        if(currNode.distance === Infinity){
+            return visitedNodesInOrder;
+        }
+        currNode.visited = true;
+        if(currNode === finishNode){
+            return visitedNodesInOrder;
+        }
+        let toAdd = updateNeighborsAStar(currNode, grid);
+        for(const node of toAdd){
+            if(!openList.includes(node)){
+                openList.push(node);
+            }
+        }
+    }
+}
+
+//manhattan distance to end node + distance travelled to node
+function sortNodesAStar(nodes, distanceMeasure){
+    if(distanceMeasure === "euclidean"){
+        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA) - nodeB.distance - euclDistToEndNode(nodeB));
+    }
+    else{
+        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA) - nodeB.distance - manhattanDistToEndNode(nodeB));
+    }
+}
+
+function manhattanDistToEndNode(node){
+    let splitEndId = grid.end.split("-");
+    let yEnd = splitEndId[0];
+    let xEnd = splitEndId[1];
+    let splitNodeId = node.id.split("-");
+    let yNode = splitNodeId[0];
+    let xNode= splitNodeId[1];
+
+    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
+}
+
+function euclDistToEndNode(node){
+    let splitEndId = grid.end.split("-");
+    let yEnd = splitEndId[0];
+    let xEnd = splitEndId[1];
+    let splitNodeId = node.id.split("-");
+    let yNode = splitNodeId[0];
+    let xNode= splitNodeId[1];
+
+    return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
+}
+
+function updateNeighborsAStar(node, grid) {
+    const neighbors = getNeighbors(node, grid);
+    const filteredNeighbors = [];
+    for(const neighbor of neighbors){
+        if(!neighbor.visited){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+        else if(neighbor.distance > node.distance + neighbor.weight + 1){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+    }
+    return filteredNeighbors;
+}
+
+function getNeighbors(node, grid){
+    const neighbors = [];
+    const coordinates = node.id.split("-");
+    const row = parseInt(coordinates[0]);
+    const col = parseInt(coordinates[1]);
+    if(row > 0){
+        neighbors.push(grid.getNode(`${row - 1}-${col}`));
+    }
+    if(col > 0){
+        neighbors.push(grid.getNode(`${row}-${col - 1}`));
+    }
+    if(row < grid.height - 1){
+        neighbors.push(grid.getNode(`${row + 1}-${col}`));
+    }
+    if(col < grid.width - 1){
+        neighbors.push(grid.getNode(`${row}-${col + 1}`));
+    }
+
+    return neighbors;
+}
