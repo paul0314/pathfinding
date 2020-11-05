@@ -129,7 +129,12 @@ class Grid{
         else if(this.currentAlgo === "A* Manhattan"){
             visitedNodesInOrder = aStar(this, "manhattan");
         }
+        /*else if(this.currentAlgo === "Recursive Division"){
+            this.algoDone = true;
+            recursiveDivision();
+        }*/
         else{
+            this.algoDone = true;
             return;
         }
         const nodesInShortestPathOrder = getNodesInShortestPathOrder(this.end);
@@ -526,11 +531,11 @@ function manhattanDistToEndNode(node){
 
 function euclDistToEndNode(node){
     let splitEndId = grid.end.split("-");
-    let yEnd = splitEndId[0];
-    let xEnd = splitEndId[1];
+    let yEnd = parseInt(splitEndId[0]);
+    let xEnd = parseInt(splitEndId[1]);
     let splitNodeId = node.id.split("-");
-    let yNode = splitNodeId[0];
-    let xNode= splitNodeId[1];
+    let yNode = parseInt(splitNodeId[0]);
+    let xNode= parseInt(splitNodeId[1]);
 
     return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
 }
