@@ -506,6 +506,7 @@ function aStar (grid, distanceMeasure){
             }
         }
     }
+    return visitedNodesInOrder;
 }
 
 //manhattan distance to end node + distance travelled to node
