@@ -129,10 +129,11 @@ class Grid{
         else if(this.currentAlgo === "A* Manhattan"){
             visitedNodesInOrder = aStar(this, "manhattan");
         }
-        /*else if(this.currentAlgo === "Recursive Division"){
+        else if(this.currentAlgo === "Recursive Division"){
             this.algoDone = true;
             recursiveDivision();
-        }*/
+            return;
+        }
         else{
             this.algoDone = true;
             return;
@@ -578,4 +579,113 @@ function getNeighbors(node, grid){
     }
 
     return neighbors;
+}
+
+function recursiveDivision(){
+    grid.resetNodes();
+    grid.clearBoard();
+    console.log(grid.width);
+    console.log(grid.height);
+    divide(grid.width, grid.height, 0, 0);
+}
+
+function divide(width, height, offSetX, offSetY) {
+    let possible;
+    if (width < 2 || height < 2){
+        return;
+    }
+    let orientation, pathIdx, wallIdx;
+    if(width > height){
+        orientation = "vertical";
+    }
+    else if(height > width){
+        orientation = "horizontal";
+    }
+    else{
+        orientation = Math.floor(Math.random()*2) === 0 ? "vertical" : "horizontal";
+    }
+    possible = returnPossibleWallIdx(orientation, width, height, offSetX, offSetY);
+    if(possible.length === 0){
+        return;
+    }
+    if(orientation === "horizontal"){
+        wallIdx = possible[Math.floor(Math.random() * possible.length)];
+        pathIdx = Math.floor(Math.random() * width);
+        buildWall(wallIdx, pathIdx, "horizontal", height, width, offSetX, offSetY);
+        divide(width, wallIdx - offSetY, offSetX, offSetY);
+        divide(width, height - wallIdx + offSetY - 1, offSetX, wallIdx + 1);
+    }
+    else{
+        wallIdx = possible[Math.floor(Math.random() * possible.length)];
+        pathIdx = Math.floor(Math.random() * height);
+        buildWall(wallIdx, pathIdx, "vertical", height, width, offSetX, offSetY);
+        divide(wallIdx - offSetX, height, offSetX, offSetY);
+        divide(width - wallIdx + offSetX - 1, height, wallIdx + 1, offSetY);
+    }
+}
+
+function outOfBounce(x, y) {
+    if(grid.height <= y || grid.width <= x || x < 0 || y < 0){
+        return true;
+    }
+    return false;
+}
+
+function isWall(x, y){
+    if(grid.getNode(`${parseInt(y)}-${parseInt(x)}`).type === "wall"){
+        return true;
+    }
+    return false;
+}
+
+function returnPossibleWallIdx(orientation, width, height, offsetX, offsetY){
+    let possible = [];
+    if(orientation === "horizontal"){
+        for(let i = 1; i < height - 1; i++){
+            let x = parseInt(offsetX);
+            let y = parseInt(offsetY) + i;
+            //left side check
+            if(outOfBounce(x - 1, y) || isWall(x - 1, y)){
+                if(outOfBounce(x + width, y) || isWall(x + width, y)){
+                    possible.push(y);
+                }
+            }
+        }
+    }
+    else{
+        for(let i = 1; i < width - 1; i++){
+            let x = parseInt(offsetX) + i;
+            let y = parseInt(offsetY);
+            //left side check
+            if(outOfBounce(x, y - 1) || isWall(x, y - 1)){
+                if(outOfBounce(x, y + height) || isWall(x, y + height)){
+                    possible.push(x);
+                }
+            }
+        }
+    }
+    return possible;
+}
+
+function buildWall(wallIdx, pathIdx, orientation, height, width, offsetX, offsetY){
+    if(orientation === "horizontal"){
+        for(let i = 0; i < width; i++){
+            let currNode = grid.getNode(`${parseInt(wallIdx)}-${i + parseInt(offsetX)}`);
+            if(currNode.type !== "start" && currNode.type !== "end"){
+                if(i !== pathIdx){
+                    grid.changeNodeType(currNode, "wall");
+                }
+            }
+        }
+    }
+    else{
+        for(let i = 0; i < height; i++){
+            let currNode = grid.getNode(`${i + parseInt(offsetY)}-${parseInt(wallIdx)}`);
+            if(currNode.type !== "start" && currNode.type !== "end"){
+                if(i !== pathIdx){
+                    grid.changeNodeType(currNode, "wall");
+                }
+            }
+        }
+    }
 }
