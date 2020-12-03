@@ -584,9 +584,27 @@ function getNeighbors(node, grid){
 function recursiveDivision(){
     grid.resetNodes();
     grid.clearBoard();
-    console.log(grid.width);
-    console.log(grid.height);
-    divide(grid.width, grid.height, 0, 0);
+
+    if(grid.height % 2 === 1){
+        if(grid.width % 2 === 1){
+            divide(grid.width, grid.height, 0, 0);
+        }
+        else{
+            buildVerticalLine(0, grid.height - 1, grid.width - 1);
+            divide(grid.width - 1, grid.height, 0, 0);
+        }
+    }
+    else{
+        if(grid.width % 2 === 1){
+            buildHorizontalLine(0, grid.width - 1, grid.height - 1);
+            divide(grid.width, grid.height - 1, 0, 0);
+        }
+        else{
+            buildHorizontalLine(0, grid.width - 1, grid.height - 1);
+            buildVerticalLine(0, grid.height - 1, grid.width - 1);
+            divide(grid.width - 1, grid.height - 1, 0, 0);
+        }
+    }
 }
 
 function divide(width, height, offSetX, offSetY) {
@@ -604,20 +622,28 @@ function divide(width, height, offSetX, offSetY) {
     else{
         orientation = Math.floor(Math.random()*2) === 0 ? "vertical" : "horizontal";
     }
-    possible = returnPossibleWallIdx(orientation, width, height, offSetX, offSetY);
+    possible = returnPossiblePathAndWall(orientation, width, height, offSetX, offSetY);
     if(possible.length === 0){
-        return;
+        if(width === 3 && height === 3){
+            orientation = orientation === "vertical" ? "horizontal" : "vertical";
+            possible = returnPossiblePathAndWall(orientation, width, height, offSetX, offSetY);
+            if(possible.length === 0){
+                return;
+            }
+        }
+        else{
+            return;
+        }
     }
+    let randomIndex = Math.floor(Math.random() * possible.length);
+    pathIdx = possible[randomIndex][0];
+    wallIdx = possible[randomIndex][1];
     if(orientation === "horizontal"){
-        wallIdx = possible[Math.floor(Math.random() * possible.length)];
-        pathIdx = Math.floor(Math.random() * width);
         buildWall(wallIdx, pathIdx, "horizontal", height, width, offSetX, offSetY);
         divide(width, wallIdx - offSetY, offSetX, offSetY);
         divide(width, height - wallIdx + offSetY - 1, offSetX, wallIdx + 1);
     }
     else{
-        wallIdx = possible[Math.floor(Math.random() * possible.length)];
-        pathIdx = Math.floor(Math.random() * height);
         buildWall(wallIdx, pathIdx, "vertical", height, width, offSetX, offSetY);
         divide(wallIdx - offSetX, height, offSetX, offSetY);
         divide(width - wallIdx + offSetX - 1, height, wallIdx + 1, offSetY);
@@ -636,35 +662,6 @@ function isWall(x, y){
         return true;
     }
     return false;
-}
-
-function returnPossibleWallIdx(orientation, width, height, offsetX, offsetY){
-    let possible = [];
-    if(orientation === "horizontal"){
-        for(let i = 1; i < height - 1; i++){
-            let x = parseInt(offsetX);
-            let y = parseInt(offsetY) + i;
-            //left side check
-            if(outOfBounce(x - 1, y) || isWall(x - 1, y)){
-                if(outOfBounce(x + width, y) || isWall(x + width, y)){
-                    possible.push(y);
-                }
-            }
-        }
-    }
-    else{
-        for(let i = 1; i < width - 1; i++){
-            let x = parseInt(offsetX) + i;
-            let y = parseInt(offsetY);
-            //left side check
-            if(outOfBounce(x, y - 1) || isWall(x, y - 1)){
-                if(outOfBounce(x, y + height) || isWall(x, y + height)){
-                    possible.push(x);
-                }
-            }
-        }
-    }
-    return possible;
 }
 
 function buildWall(wallIdx, pathIdx, orientation, height, width, offsetX, offsetY){
@@ -688,4 +685,72 @@ function buildWall(wallIdx, pathIdx, orientation, height, width, offsetX, offset
             }
         }
     }
+}
+
+function buildVerticalLine(startY, endY, x){
+    for(let i = 0; i <= (endY - startY); i++){
+        let currNode = grid.getNode(`${i + parseInt(startY)}-${parseInt(x)}`);
+        if(currNode.type !== "start" && currNode.type !== "end"){
+            grid.changeNodeType(currNode, "wall");
+        }
+    }
+}
+
+function buildHorizontalLine(startX, endX, y){
+    for(let i = 0; i <= (endX - startX); i++){
+        let currNode = grid.getNode(`${parseInt(y)}-${i + parseInt(startX)}`);
+        if(currNode.type !== "start" && currNode.type !== "end"){
+            grid.changeNodeType(currNode, "wall");
+        }
+    }
+}
+
+// return [pathId, wallId]
+function returnPossiblePathAndWall(orientation, width, height, offsetX, offsetY){
+    let possible = [];
+    if(orientation === "horizontal"){
+        for(let i = 1; i < height - 1; i++){
+            let x = parseInt(offsetX);
+            let y = parseInt(offsetY) + i;
+            //left side check
+            if(outOfBounce(x - 1, y) || isWall(x - 1, y)){
+                if(outOfBounce(x + width, y) || isWall(x + width, y)){
+                    for(let j = offsetX; j < offsetX + width; j++){
+                        possible.push([j - offsetX,y]);
+                    }
+                }
+                else{
+                    possible.push([x + width - 1 - offsetX,y]);
+                }
+            }
+            else{
+                if(outOfBounce(x + width, y) || isWall(x + width, y)){
+                    possible.push([x - offsetX,y]);
+                }
+            }
+        }
+    }
+    else{
+        for(let i = 1; i < width - 1; i++){
+            let x = parseInt(offsetX) + i;
+            let y = parseInt(offsetY);
+            //left side check
+            if(outOfBounce(x, y - 1) || isWall(x, y - 1)){
+                if(outOfBounce(x, y + height) || isWall(x, y + height)){
+                    for(let j = offsetY; j < offsetY + height; j++){
+                        possible.push([j - offsetY,x]);
+                    }
+                }
+                else{
+                    possible.push([y + height - 1 - offsetY, x]);
+                }
+            }
+            else{
+                if(outOfBounce(x, y + height) || isWall(x, y + height)){
+                    possible.push([y - offsetY,x]);
+                }
+            }
+        }
+    }
+    return possible.filter(array => array[1] % 2);
 }
