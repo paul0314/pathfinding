@@ -81,16 +81,6 @@ class Model{
         this.start = null;
         this.end = null;
     }
-    //ein / aus um während Algoausführung alles zu sperren (STATE)
-    ein(){
-
-    }
-    aus(){
-
-    }
-    commitBoardSizeChange(){
-        this.onBoardSizeChanged();
-    }
     commitNodeStatusChange(nodeId, oldStatus, newStatus){
         this.onNodeStatusChange(nodeId, oldStatus, newStatus);
     }
@@ -108,50 +98,35 @@ class Model{
         let oldStatus = this.grid.getType(nodeId);
         if(oldStatus !== newNodeType){
             if(newNodeType === "start"){
-                this.setStart(nodeId);
+                this.start = `${nodeId}`;
             }
             else if(newNodeType === "end"){
-                this.setEnd(nodeId);
+                this.end = `${nodeId}`;
             }
-            else{
-                this.grid.changeNodeType(nodeId, newNodeType);
-                this.commitNodeTypeChange(nodeId, oldStatus, newNodeType);
-            }
+            this.grid.changeNodeType(nodeId, newNodeType);
+            this.commitNodeTypeChange(nodeId, oldStatus, newNodeType);
         }
     }
     getNode(nodeId){
         return this.grid.nodes[nodeId];
     }
-    setStart(startId){
-        let oldStartId = this.start;
-        if(oldStartId !== null){
-            this.grid.changeNodeType(oldStartId, "none");
-            this.commitNodeTypeChange(oldStartId, "start", "none");
-        }
-        let oldStartType = this.grid.getType(startId);
-        this.grid.changeNodeType(startId, "start");
-        this.start = `${startId}`;
-        this.commitNodeTypeChange(startId, oldStartType, "start");
+    setStart(newStartId){
+        let oldStartType = this.grid.getType(newStartId);
+        this.grid.changeNodeType(newStartId, "start");
+        this.start = `${newStartId}`;
+        this.commitNodeTypeChange(newStartId, oldStartType, "start");
     }
-    setEnd(endId){
-        let oldEndId = this.end;
-        if(oldEndId !== null){
-            this.grid.changeNodeType(oldEndId, "none");
-            this.commitNodeTypeChange(oldEndId, "end", "none");
-        }
-        let oldEndType = this.grid.getType(endId);
-        this.grid.changeNodeType(endId, "end");
-        this.end = `${endId}`;
-        this.commitNodeTypeChange(endId, oldEndType, "end");
+    setEnd(newEndId){
+        let oldEndType = this.grid.getType(newEndId);
+        this.grid.changeNodeType(newEndId, "end");
+        this.end = `${newEndId}`;
+        this.commitNodeTypeChange(newEndId, oldEndType, "end");
     }
     bindNodeStatusChanged(callback){
         this.onNodeStatusChange = callback;
     }
     bindNodeTypeChanged(callback){
         this.onNodeTypeChange = callback;
-    }
-    bindBoardSizeChanged(callback){
-        this.onBoardSizeChanged = callback;
     }
     initialize(height, width){
         this.grid = new Grid(height, width);
@@ -167,6 +142,14 @@ class Controller{
         this.weightNodes = ["sand", "water", "fire"];
         this.weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
         this.speed = {slow: 5, medium: 2, fast: 0.5}
+
+        this.algoDone = true;
+        this.currSpeed = "medium";
+        this.selectedNodeType = "wall";
+        this.mouseDown = false;
+        this.pressedNodeType = "none";
+        this.prevNode = null;
+        this.prevNodeType = "none";
 
         let boardSize = this.view.calculateWidthAndHeight();
         let startEndIds = this.calculateInitialStartEnd(boardSize[0], boardSize[1]);
@@ -185,7 +168,6 @@ class Controller{
         this.view.bindSelectedNodeType(this.handleNodeTypeSelected);
         this.view.bindSetAlgo(this.handleAlgoSelected);
         this.view.bindVisualize(this.handleVisualize);
-        this.model.bindBoardSizeChanged(this.onReload);
     }
     onNodeTypeChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeType(nodeId, oldType, newType);
@@ -195,6 +177,11 @@ class Controller{
     }
     onReload = grid => {
         this.view.displayGrid(grid);
+        this.view.setupDropdowns();
+        this.view.bindMouseEnter(this.handleMouseEnter);
+        this.view.bindMouseUp(this.handleMouseUp);
+        this.view.bindMouseDown(this.handleMouseDown);
+        this.view.bindMouseLeave(this.handleMouseLeave);
     }
     handleVisualize = (eventEle) =>{
         let deepGridCopy = this.deepCopyGrid(this.model.grid);
@@ -214,7 +201,9 @@ class Controller{
         }
     }
     handleClearWeights = () =>{
-        this.clearWeights();
+        if(this.algoDone){
+            this.clearWeights();
+        }
     }
     clearWeights(){
         for(let row = 0; row < this.model.grid.height; row++){
@@ -228,32 +217,115 @@ class Controller{
         }
     }
     handleClearPath = () =>{
-        this.clearWalls();
+        if(this.algoDone){
+            this.clearWalls();
+        }
     }
     clearPath(){
         for(let row = 0; row < this.model.grid.height; row++){
             for(let col = 0; col < this.model.grid.width; col++){
                 let currId = `${row}-${col}`;
-                let currNode = this.model.grid.getNode(currId);
                 this.model.setNodeStatus(currId, "unvisited");
             }
         }
     }
     handleClearBoard = () =>{
-        this.clearWalls();
-        this.clearWeights();
-        this.clearPath();
-
+        if(this.algoDone){
+            this.clearWalls();
+            this.clearWeights();
+            this.clearPath();
+        }
     }
     handleSpeedSelected = (eventEle) =>{
-        grid.speed = `${eventEle.dataset.id}`;
-        eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
+        if(this.algoDone){
+            this.currSpeed = `${eventEle.dataset.id}`;
+            eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
+        }
     }
     handleNodeTypeSelected = (eventEle) =>{
-
+        if(this.algoDone){
+            this.selectedNodeType = `${eventEle.dataset.id}`;
+            eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
+        }
     }
     handleAlgoSelected = (eventEle) =>{
+        if(this.algoDone){
 
+        }
+    }
+    handleMouseDown = (nodeId) => {
+        if(this.algoDone){
+            this.mouseDown = true;
+            let currNode = this.model.getNode(nodeId);
+            this.pressedNodeType = currNode.type;
+            this.prevNode = this.model.getNode(nodeId);
+            if(currNode.type !== "end" && currNode.type !== "start"){
+                this.changeNormalNode(currNode);
+            }
+        }
+    }
+    handleMouseUp = (nodeId) => {
+        if(this.algoDone){
+            let currNode = this.model.getNode(nodeId);
+            if (currNode.type === "end" || currNode.type === "start") {
+                if (currNode.type !== this.pressedNodeType) {
+                    if (this.pressedNodeType === "start") {
+                        this.model.setStart(this.prevNode.id);
+                    } else if (this.pressedNodeType === "end") {
+                        this.model.setEnd(this.prevNode.id);
+                    }
+                }
+            }
+            this.mouseDown = false;
+            this.pressedNodeType = "none";
+            this.prevNode = null;
+            this.prevNodeType = "none";
+        }
+    }
+    handleMouseEnter = (nodeId) => {
+        if(this.algoDone && this.mouseDown){
+            let currNode = this.model.getNode(nodeId);
+            this.prevNodeType = currNode.type;
+            if(this.pressedNodeType !== "end" && this.pressedNodeType !== "start"){
+                this.changeNormalNode(currNode);
+            }
+            else{
+                this.changeSpecialNode(currNode);
+            }
+        }
+    }
+    handleMouseLeave = (nodeId) => {
+        if(this.algoDone && this.mouseDown){
+            let currNode = this.model.getNode(nodeId);
+            if(this.pressedNodeType === "end" || this.pressedNodeType === "start"){
+                this.model.setNodeType(currNode.id, this.prevNodeType);
+            }
+            this.prevNode = currNode;
+        }
+    }
+    changeNormalNode(node){
+        if(node.type === "start" || node.type === "end"){
+            return;
+        }
+        if(node.type !== this.selectedNodeType){
+            this.model.setNodeType(node.id, this.selectedNodeType);
+        }
+        else{
+            this.model.setNodeType(node.id, "none");
+        }
+    }
+    changeSpecialNode(node){
+        if(this.prevNode){
+            if(node.type !== "start" && node.type !== "end"){
+                if(this.pressedNodeType === "start"){
+                    this.model.setStart(node.id);
+                }
+                if(this.pressedNodeType === "end"){
+                    this.model.setEnd(node.id);
+                }
+                node.type = this.pressedNodeType;
+            }
+        }
     }
     calculateInitialStartEnd(height, width){
         let startId = `${Math.floor(height * 3 / 4)}-${Math.floor(width * 3 / 4)}`;
@@ -276,10 +348,7 @@ class Controller{
 }
 
 class View{
-    //this.possibleStatuses=...
-    //this.possibleTypes=...
     constructor(controller, model) {
-        //model und controller hier nicht gebraucht?
         this.startBtn = this.getElement("startButton");
         this.clearBoard = this.getElement("clearBoard");
         this.clearWalls = this.getElement("clearWalls");
@@ -288,7 +357,8 @@ class View{
         this.nodeType = this.getElement("nodeType");
         this.speedDropdown = this.getElement("speedDropdown");
         this.selectAlgo = this.getElement("selectAlgo");
-        this.setupDropdowns();
+        this.height = 0;
+        this.width = 0;
     }
 
     bindClearBoard(handler){
@@ -344,6 +414,38 @@ class View{
             handler();
         });
     }
+    bindMouseDown(handler){
+        for(let row = 0; row < this.height; row++){
+            for(let col = 0; col < this.width; col++){
+                let currId = `${row}-${col}`;
+                let currHTMLElement = document.getElementById(currId);
+                currHTMLElement.addEventListener("mousedown", event => {
+                    event.preventDefault();
+                    handler(currId);
+                });
+            }
+        }
+    }
+    bindMouseUp(handler){
+        this.bindMouseEvent(handler, "mouseup");
+    }
+    bindMouseEnter(handler){
+        this.bindMouseEvent(handler, "mouseenter");
+    }
+    bindMouseLeave(handler){
+        this.bindMouseEvent(handler, "mouseleave");
+    }
+    bindMouseEvent(handler, type){
+        for(let row = 0; row < this.height; row++){
+            for(let col = 0; col < this.width; col++){
+                let currId = `${row}-${col}`;
+                let currHTMLElement = document.getElementById(currId);
+                currHTMLElement.addEventListener(type, event => {
+                    handler(currId);
+                });
+            }
+        }
+    }
     calculateWidthAndHeight(){
         let nav = this.getElement("nav");
         const navHeight = nav.getBoundingClientRect().height;
@@ -353,10 +455,12 @@ class View{
     }
     displayGrid(grid){
         let tableGrid = this.getElement("table-grid");
+        this.height = grid.height;
+        this.width = grid.width;
             let tableHTML = "";
-        for(let row = 0; row < grid.height; row++){
+        for(let row = 0; row < this.height; row++){
             let rowHTML = `<tr id="row ${row}">`;
-            for(let col = 0; col < grid.width; col++){
+            for(let col = 0; col < this.width; col++){
                 let idNewNode = `${row}-${col}`;
                 let newNode = grid.getNode(idNewNode);
                 rowHTML += `<td id="${idNewNode}" class="${newNode.status} ${newNode.type}"></td>`;
@@ -372,8 +476,8 @@ class View{
     }
     displayChangedNodeType(nodeId, oldType, newType){
         let currHTMLElement = this.getElement(nodeId);
-        currHTMLElement.classList.add(newType);
         currHTMLElement.classList.remove(oldType);
+        currHTMLElement.classList.add(newType);
     }
     getElement(selector){
         return document.getElementById(selector);
