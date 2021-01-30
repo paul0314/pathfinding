@@ -157,7 +157,6 @@ class Controller{
         this.onReload(this.model.grid);
         this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
         this.model.bindNodeStatusChanged(this.onNodeStatusChanged);
-        this.view.enableControl();
         this.model.setNodeType(startEndIds[0], "start");
         this.model.setNodeType(startEndIds[1], "end");
         this.view.bindClearBoard(this.handleClearBoard);
@@ -332,19 +331,6 @@ class Controller{
         let endId = `${Math.floor(height / 4)}-${Math.floor(width / 4)}`;
         return [startId, endId];
     }
-    deepCopyGrid(grid){
-        let newGrid = new Grid(grid.height, grid.width);
-        for(let row = 0; row < grid.height; row++){
-            for(let col = 0; col < grid.width; col++){
-                let currId = `${row}-${col}`;
-                newGrid.setNodeStatus(currId, grid.getStatus(currId));
-                newGrid.setNodeType(currId, grid.getType(currId));
-            }
-        }
-        newGrid.setStart(grid.start);
-        newGrid.setEnd(grid.end);
-        return newGrid;
-    }
 }
 
 class View{
@@ -485,15 +471,6 @@ class View{
     getAllElements(selector){
         return document.querySelectorAll(selector);
     }
-    enableControl(){
-
-    }
-    disableControl(){
-
-    }
-    actionPerformed(event){
-
-    }
     setupDropdowns(){
         const dropdownBtns = this.getAllElements(".dropdown-toggle");
         const dropdownContent = this.getAllElements(".dropdown-content");
@@ -534,3 +511,268 @@ document.addEventListener("DOMContentLoaded", function () {
     let model = new Model();
     let controller = new Controller(model);
 });
+
+//helper functions
+
+function setupNodes(grid){
+    let weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
+    for(let row = 0; row < grid.height; row++){
+        for(let col = 0; col < grid.width; col++) {
+            let currId = `${row}-${col}`;
+            let currNode = grid.getNode(currId);
+            currNode.status = "unvisited";
+            currNode.previousNode = null;
+            currNode.distance = Infinity;
+            currNode.visited = false;
+            currNode.weight = weights[currNode.type];
+        }
+    }
+}
+
+function deepCopyGrid(grid){
+    let newGrid = new Grid(grid.height, grid.width);
+    for(let row = 0; row < grid.height; row++){
+        for(let col = 0; col < grid.width; col++){
+            let currId = `${row}-${col}`;
+            newGrid.setNodeStatus(currId, grid.getStatus(currId));
+            newGrid.setNodeType(currId, grid.getType(currId));
+        }
+    }
+    newGrid.setStart(grid.start);
+    newGrid.setEnd(grid.end);
+    return newGrid;
+}
+
+function getAllNodes(grid){
+    let nodes = [];
+    for(let row = 0; row < grid.height; row++){
+        for(let col = 0; col < grid.width; col++) {
+            let currId = `${row}-${col}`;
+            let currNode = grid.getNode(currId);
+            nodes.push(currNode);
+        }
+    }
+    return nodes;
+}
+
+
+
+
+
+let Algo = function(){
+    this.algo = "";
+};
+
+Algo.prototype = {
+    setStrategy: function(algo){
+        this.algo = algo;
+    },
+    calculateVisitedNodesInOrder: function(grid){
+        return this.algo.calculateVisitedNodesInOrder(grid);
+    },
+    getNodesInShortestPathOrder: function(grid){
+        const nodesInShortestPathOrder = [];
+        let currentNode = grid.getNode(grid.end);
+        while (currentNode != null){
+            nodesInShortestPathOrder.unshift(currentNode);
+            currentNode = currentNode.previousNode;
+        }
+        return nodesInShortestPathOrder;
+    }
+};
+
+let dijkstra = function(){
+    this.calculateVisitedNodesInOrder = function(paramGrid){
+        let grid = deepCopyGrid(paramGrid);
+        setupNodes(grid);
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const visitedNodesInOrder = [];
+        const unvisitedNodes = getAllNodes(grid);
+        startNode.distance = 0;
+        while(!!unvisitedNodes.length){
+            sortNodesByDistance(unvisitedNodes);
+            const closestNode = unvisitedNodes.shift();
+            if(closestNode.type === "wall") continue;
+            if(closestNode.distance === Infinity){
+                return visitedNodesInOrder;
+            }
+            closestNode.visited = true;
+            visitedNodesInOrder.push(closestNode);
+            if(closestNode === finishNode){
+                return visitedNodesInOrder;
+            }
+            updateUnvisitedNeighbors(closestNode, grid);
+        }
+    }
+}
+
+function sortNodesByDistance(nodes){
+    nodes.sort((nodeA, nodeB) => nodeA.distance - nodeB.distance);
+}
+
+function getUnvisitedNeighbors(node, grid){
+    const neighbors = [];
+    const coordinates = node.id.split("-");
+    const row = parseInt(coordinates[0]);
+    const col = parseInt(coordinates[1]);
+    if(row > 0){
+        neighbors.push(grid.getNode(`${row - 1}-${col}`));
+    }
+    if(col > 0){
+        neighbors.push(grid.getNode(`${row}-${col - 1}`));
+    }
+    if(row < grid.height - 1){
+        neighbors.push(grid.getNode(`${row + 1}-${col}`));
+    }
+    if(col < grid.width - 1){
+        neighbors.push(grid.getNode(`${row}-${col + 1}`));
+    }
+
+    return neighbors.filter(neighbor => !neighbor.visited);
+}
+
+function updateUnvisitedNeighbors(node, grid){
+    const unvisitedNeighbors = getUnvisitedNeighbors(node, grid);
+    for(const neighbor of unvisitedNeighbors){
+        neighbor.distance = node.distance + neighbor.weight + 1;
+        neighbor.previousNode = node;
+    }
+}
+
+
+let aStarManhattan = function(){
+    this.calculateVisitedNodesInOrder = function (paramGrid) {
+        let grid = deepCopyGrid(paramGrid);
+        setupNodes(grid);
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const openList = [];
+        const visitedNodesInOrder = [];
+        openList.push(grid.getNode(grid.start));
+        startNode.distance = 0;
+        while (!!openList.length) {
+            sortNodesAStar(openList, "manhattan");
+            const currNode = openList.shift();
+            visitedNodesInOrder.push(currNode);
+            if (currNode.type === "wall") continue;
+            if (currNode.distance === Infinity) {
+                return visitedNodesInOrder;
+            }
+            currNode.visited = true;
+            if (currNode === finishNode) {
+                return visitedNodesInOrder;
+            }
+            let toAdd = updateNeighborsAStar(currNode, grid);
+            for (const node of toAdd) {
+                if (!openList.includes(node)) {
+                    openList.push(node);
+                }
+            }
+        }
+        return visitedNodesInOrder;
+    }
+}
+
+function manhattanDistToEndNode(node){
+    let splitEndId = grid.end.split("-");
+    let yEnd = splitEndId[0];
+    let xEnd = splitEndId[1];
+    let splitNodeId = node.id.split("-");
+    let yNode = splitNodeId[0];
+    let xNode= splitNodeId[1];
+
+    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
+}
+
+let aStarEuclidean = function(){
+    this.calculateVisitedNodesInOrder = function (paramGrid) {
+        let grid = deepCopyGrid(paramGrid);
+        setupNodes(grid);
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const openList = [];
+        const visitedNodesInOrder = [];
+        openList.push(grid.getNode(grid.start));
+        startNode.distance = 0;
+        while (!!openList.length) {
+            sortNodesAStar(openList, "euclidean");
+            const currNode = openList.shift();
+            visitedNodesInOrder.push(currNode);
+            if (currNode.type === "wall") continue;
+            if (currNode.distance === Infinity) {
+                return visitedNodesInOrder;
+            }
+            currNode.visited = true;
+            if (currNode === finishNode) {
+                return visitedNodesInOrder;
+            }
+            let toAdd = updateNeighborsAStar(currNode, grid);
+            for (const node of toAdd) {
+                if (!openList.includes(node)) {
+                    openList.push(node);
+                }
+            }
+        }
+        return visitedNodesInOrder;
+    }
+}
+
+function euclDistToEndNode(node){
+    let splitEndId = grid.end.split("-");
+    let yEnd = parseInt(splitEndId[0]);
+    let xEnd = parseInt(splitEndId[1]);
+    let splitNodeId = node.id.split("-");
+    let yNode = parseInt(splitNodeId[0]);
+    let xNode= parseInt(splitNodeId[1]);
+
+    return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
+}
+
+function sortNodesAStar(nodes, distanceMeasure){
+    if(distanceMeasure === "euclidean"){
+        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA) - nodeB.distance - euclDistToEndNode(nodeB));
+    }
+    else{
+        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA) - nodeB.distance - manhattanDistToEndNode(nodeB));
+    }
+}
+
+function updateNeighborsAStar(node, grid) {
+    const neighbors = getNeighbors(node, grid);
+    const filteredNeighbors = [];
+    for(const neighbor of neighbors){
+        if(!neighbor.visited){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+        else if(neighbor.distance > node.distance + neighbor.weight + 1){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+    }
+    return filteredNeighbors;
+}
+
+function getNeighbors(node, grid){
+    const neighbors = [];
+    const coordinates = node.id.split("-");
+    const row = parseInt(coordinates[0]);
+    const col = parseInt(coordinates[1]);
+    if(row > 0){
+        neighbors.push(grid.getNode(`${row - 1}-${col}`));
+    }
+    if(col > 0){
+        neighbors.push(grid.getNode(`${row}-${col - 1}`));
+    }
+    if(row < grid.height - 1){
+        neighbors.push(grid.getNode(`${row + 1}-${col}`));
+    }
+    if(col < grid.width - 1){
+        neighbors.push(grid.getNode(`${row}-${col + 1}`));
+    }
+
+    return neighbors;
+}
