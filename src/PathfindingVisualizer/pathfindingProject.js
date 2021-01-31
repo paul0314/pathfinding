@@ -138,7 +138,6 @@ class Controller{
         this.view = new View(parController, model);
 
         this.weightNodes = ["sand", "water", "fire"];
-        this.weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
         this.speeds = {slow: 5, medium: 2, fast: 0.5};
 
         this.algoDone = true;
@@ -174,6 +173,7 @@ class Controller{
         this.view.bindSelectedNodeType(this.handleNodeTypeSelected);
         this.view.bindSetAlgo(this.handleAlgoSelected);
         this.view.bindVisualize(this.handleVisualize);
+        this.view.bindVisualizeMaze(this.handleMazeSelected);
     }
     onNodeTypeChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeType(nodeId, oldType, newType);
@@ -198,13 +198,12 @@ class Controller{
                 let pathNodesInOrder = visitedAndPathNodes[1];
                 this.clearPath();
                 this.animateAlgo(visitedNodesInOrder, pathNodesInOrder);
+                //algoDone wird in animateAlgo auf true gesetzt
             }
             else{
                 this.algoDone = true;
                 let startBtn = this.view.getElement("startButton");
                 startBtn.innerHTML = `Pick an Algorithm!`;
-                console.log(this.model.grid);
-                console.log(this.model.grid.start);
             }
         }
     }
@@ -240,7 +239,7 @@ class Controller{
     }
     handleClearPath = () =>{
         if(this.algoDone){
-            this.clearWalls();
+            this.clearPath();
         }
     }
     clearPath(){
@@ -253,10 +252,13 @@ class Controller{
     }
     handleClearBoard = () =>{
         if(this.algoDone){
-            this.clearWalls();
-            this.clearWeights();
-            this.clearPath();
+            this.clearBoard();
         }
+    }
+    clearBoard(){
+        this.clearWalls();
+        this.clearWeights();
+        this.clearPath();
     }
     handleSpeedSelected = (eventEle) =>{
         if(this.algoDone){
@@ -287,6 +289,40 @@ class Controller{
             }
             let startBtn = this.view.getElement("startButton");
             startBtn.innerHTML = `Visualize ${eventId}!`;
+        }
+    }
+    handleMazeSelected = (eventEle) => {
+        if(this.algoDone){
+            this.algoDone = false;
+            let eventId = eventEle.dataset.id;
+            let maze = new Maze();
+            if(eventId === "Recursive Division"){
+                this.clearBoard();
+                maze.setStrategy(new recursiveDivision());
+                let wallNodes = maze.calculateWallNodes(this.model.grid.height, this.model.grid.width);
+                //animation sets algoDone to true
+                this.animateMaze(wallNodes);
+            }
+            else{
+                this.algoDone = true;
+            }
+        }
+    }
+    animateMaze(wallNodes){
+        let startBtn = this.view.getElement("startButton");
+        startBtn.style.backgroundColor = "red";
+        let duration = wallNodes.length * 75 * this.speeds[`${this.currSpeed}`];
+        setTimeout(() => {
+            this.algoDone = true;
+            startBtn.style.backgroundColor = "limegreen";
+        }, duration);
+        for(let i = 0; i < wallNodes.length; i++){
+            setTimeout(() => {
+                const node = wallNodes[i];
+                if(this.model.grid.start !== node.id && this.model.grid.end !== node.id){
+                    this.model.setNodeType(node.id, "wall");
+                }
+            }, 75 * i * this.speeds[`${this.currSpeed}`]);
         }
     }
     handleMouseDown = (nodeId) => {
@@ -371,14 +407,12 @@ class Controller{
     animateAlgo(visitedNodes, pathNodes){
         let startBtn = this.view.getElement("startButton");
         startBtn.style.backgroundColor = "red";
-        //after entire animation set algoDone to true
-        let duration = this.calculateDuration(visitedNodes, pathNodes);
+        let duration = this.calculateAlgoDuration(visitedNodes, pathNodes);
         setTimeout(() => {
             this.algoDone = true;
             startBtn.style.backgroundColor = "limegreen";
         }, duration);
         this.animateVisitedNodes(visitedNodes);
-        //shortestPath animation (if path was found)
         if(pathNodes.length > 1){
             setTimeout(() => {
                 this.animatePathNodes(pathNodes);
@@ -401,7 +435,7 @@ class Controller{
             }, 50 * this.speeds[`${this.currSpeed}`] * i);
         }
     }
-    calculateDuration(visitedNodes, pathNodes){
+    calculateAlgoDuration(visitedNodes, pathNodes){
         let duration = 0;
         duration += visitedNodes.length * this.speeds[`${this.currSpeed}`] * 10;
         duration += pathNodes.length * 50 * this.speeds[`${this.currSpeed}`];
@@ -410,7 +444,7 @@ class Controller{
 }
 
 class View{
-    constructor(controller, model) {
+    constructor() {
         this.startBtn = this.getElement("startButton");
         this.clearBoard = this.getElement("clearBoard");
         this.clearWalls = this.getElement("clearWalls");
@@ -430,17 +464,17 @@ class View{
         });
     }
     bindClearWalls(handler){
-        this.clearWalls.addEventListener("click", event => {
+        this.clearWalls.addEventListener("click", () => {
             handler();
         });
     }
     bindClearPath(handler){
-        this.clearPath.addEventListener("click", event => {
+        this.clearPath.addEventListener("click", () => {
             handler();
         });
     }
     bindClearWeights(handler){
-        this.clearWeights.addEventListener("click", event => {
+        this.clearWeights.addEventListener("click", () => {
             handler();
         });
     }
@@ -472,9 +506,19 @@ class View{
         });
     }
     bindVisualize(handler){
-        this.startBtn.addEventListener("click", event => {
+        this.startBtn.addEventListener("click", () => {
             handler();
         });
+    }
+    bindVisualizeMaze(handler){
+        let mazeList = this.getElement("selectMaze");
+        mazeList.addEventListener("click", event => {
+            let eventEle = event.target;
+            if(eventEle.nodeName === "A"){
+                eventEle = eventEle.parentElement;
+            }
+            handler(eventEle);
+        })
     }
     bindMouseDown(handler){
         for(let row = 0; row < this.height; row++){
@@ -502,7 +546,7 @@ class View{
             for(let col = 0; col < this.width; col++){
                 let currId = `${row}-${col}`;
                 let currHTMLElement = document.getElementById(currId);
-                currHTMLElement.addEventListener(type, event => {
+                currHTMLElement.addEventListener(type, () => {
                     handler(currId);
                 });
             }
@@ -583,10 +627,15 @@ class View{
     }
 }
 
+
+
+//Beim Laden der Seite erstelle Model, Controller und implizit View
 document.addEventListener("DOMContentLoaded", function () {
     let model = new Model();
     let controller = new Controller(model);
 });
+
+
 
 //helper functions
 
@@ -671,6 +720,7 @@ let dijkstra = function(){
         const visitedNodesInOrder = [];
         const unvisitedNodes = getAllNodes(grid);
         startNode.distance = 0;
+        startNode.visited = true;
         while(!!unvisitedNodes.length){
             sortNodesByDistance(unvisitedNodes);
             const closestNode = unvisitedNodes.shift();
@@ -678,7 +728,6 @@ let dijkstra = function(){
             if(closestNode.distance === Infinity){
                 return visitedNodesInOrder;
             }
-            closestNode.visited = true;
             visitedNodesInOrder.push(closestNode);
             if(closestNode === finishNode){
                 return visitedNodesInOrder;
@@ -723,6 +772,7 @@ function updateUnvisitedNeighbors(node, grid){
     for(const neighbor of unvisitedNeighbors){
         neighbor.distance = node.distance + neighbor.weight + 1;
         neighbor.previousNode = node;
+        neighbor.visited = true;
     }
 }
 
@@ -817,10 +867,179 @@ function updateNeighborsAStar(node, grid) {
     return filteredNeighbors;
 }
 
-//maze algos ab hier
 
-/*let recursiveDivision = function(){
-    this.calculateVisitedNodesInOrder = function (paramGrid) {
+//MazeAlgorithmen ab hier
+
+let Maze = function(){
+    this.mazeAlgo = null;
+};
+
+Maze.prototype = {
+    setStrategy: function(mazeAlgo){
+        this.mazeAlgo = mazeAlgo;
+    },
+    calculateWallNodes: function(height, width){
+        let grid = new Grid(height, width);
+        return this.mazeAlgo.calculateWallNodes(grid);
+    },
+};
+
+let recursiveDivision = function(){
+    this.grid = null;
+    this.wallNodes = [];
+    this.calculateWallNodes = function(grid){
+        this.grid = grid;
+        if(this.grid.height % 2 === 1){
+            if(this.grid.width % 2 === 1){
+                this.divide(this.grid.width, this.grid.height, 0, 0);
+            }
+            else{
+                this.buildVerticalLine(0, this.grid.height - 1, this.grid.width - 1);
+                this.divide(this.grid.width - 1, this.grid.height, 0, 0);
+            }
+        }
+        else{
+            if(grid.width % 2 === 1){
+                this.buildHorizontalLine(0, this.grid.width - 1, this.grid.height - 1);
+                this.divide(this.grid.width, this.grid.height - 1, 0, 0);
+            }
+            else{
+                this.buildHorizontalLine(0, this.grid.width - 1, this.grid.height - 1);
+                this.buildVerticalLine(0, this.grid.height - 1, this.grid.width - 1);
+                this.divide(this.grid.width - 1, this.grid.height - 1, 0, 0);
+            }
+        }
+        return this.wallNodes;
+    }
+    this.divide = function(width, height, offSetX, offSetY) {
+        if (width < 2 || height < 2){
+            return;
+        }
+        let orientation;
+        if(width > height){
+            orientation = "vertical";
+        }
+        else if(height > width){
+            orientation = "horizontal";
+        }
+        else{
+            orientation = Math.floor(Math.random()*2) === 0 ? "vertical" : "horizontal";
+        }
+        let possible = this.returnPossiblePathAndWall(orientation, width, height, offSetX, offSetY);
+        if(possible.length === 0){
+            if(width === 3 && height === 3){
+                orientation = orientation === "vertical" ? "horizontal" : "vertical";
+                possible = this.returnPossiblePathAndWall(orientation, width, height, offSetX, offSetY);
+                if(possible.length === 0){
+                    return;
+                }
+            }
+            else{
+                return;
+            }
+        }
+        let randomIndex = Math.floor(Math.random() * possible.length);
+        let pathIdx = possible[randomIndex][0];
+        let wallIdx = possible[randomIndex][1];
+        if(orientation === "horizontal"){
+            this.buildWall(wallIdx, pathIdx, "horizontal", height, width, offSetX, offSetY);
+            this.divide(width, wallIdx - offSetY, offSetX, offSetY);
+            this.divide(width, height - wallIdx + offSetY - 1, offSetX, wallIdx + 1);
+        }
+        else{
+            this.buildWall(wallIdx, pathIdx, "vertical", height, width, offSetX, offSetY);
+            this.divide(wallIdx - offSetX, height, offSetX, offSetY);
+            this.divide(width - wallIdx + offSetX - 1, height, wallIdx + 1, offSetY);
+        }
+    }
+    this.buildVerticalLine = function(startY, endY, x){
+        for(let i = 0; i <= (endY - startY); i++){
+            let currNode = this.grid.getNode(`${i + parseInt(startY)}-${parseInt(x)}`);
+            this.grid.changeNodeType(currNode.id, "wall");
+            this.wallNodes.push(currNode);
+        }
+    }
+    this.buildHorizontalLine = function(startX, endX, y){
+        for(let i = 0; i <= (endX - startX); i++){
+            let currNode = this.grid.getNode(`${parseInt(y)}-${i + parseInt(startX)}`);
+            this.grid.changeNodeType(currNode.id, "wall");
+            this.wallNodes.push(currNode);
+        }
+    }
+    this.buildWall = function(wallIdx, pathIdx, orientation, height, width, offsetX, offsetY){
+        if(orientation === "horizontal"){
+            for(let i = 0; i < width; i++){
+                let currNode = this.grid.getNode(`${parseInt(wallIdx)}-${i + parseInt(offsetX)}`);
+                if(i !== pathIdx){
+                    this.grid.changeNodeType(currNode.id, "wall");
+                    this.wallNodes.push(currNode);
+                }
+            }
+        }
+        else{
+            for(let i = 0; i < height; i++){
+                let currNode = this.grid.getNode(`${i + parseInt(offsetY)}-${parseInt(wallIdx)}`);
+                if(i !== pathIdx){
+                    this.grid.changeNodeType(currNode.id, "wall");
+                    this.wallNodes.push(currNode);
+                }
+            }
+        }
+    }
+    this.returnPossiblePathAndWall = function(orientation, width, height, offsetX, offsetY){
+        let possible = [];
+        if(orientation === "horizontal"){
+            for(let i = 1; i < height - 1; i++){
+                let x = parseInt(offsetX);
+                let y = parseInt(offsetY) + i;
+                //left side check
+                if(this.outOfBounce(x - 1, y) || this.isWall(x - 1, y)){
+                    if(this.outOfBounce(x + width, y) || this.isWall(x + width, y)){
+                        for(let j = offsetX; j < offsetX + width; j++){
+                            possible.push([j - offsetX,y]);
+                        }
+                    }
+                    else{
+                        possible.push([x + width - 1 - offsetX,y]);
+                    }
+                }
+                else{
+                    if(this.outOfBounce(x + width, y) || this.isWall(x + width, y)){
+                        possible.push([x - offsetX,y]);
+                    }
+                }
+            }
+        }
+        else{
+            for(let i = 1; i < width - 1; i++){
+                let x = parseInt(offsetX) + i;
+                let y = parseInt(offsetY);
+                //left side check
+                if(this.outOfBounce(x, y - 1) || this.isWall(x, y - 1)){
+                    if(this.outOfBounce(x, y + height) || this.isWall(x, y + height)){
+                        for(let j = offsetY; j < offsetY + height; j++){
+                            possible.push([j - offsetY,x]);
+                        }
+                    }
+                    else{
+                        possible.push([y + height - 1 - offsetY, x]);
+                    }
+                }
+                else{
+                    if(this.outOfBounce(x, y + height) || this.isWall(x, y + height)){
+                        possible.push([y - offsetY,x]);
+                    }
+                }
+            }
+        }
+        return possible.filter(array => array[1] % 2);
+    }
+    this.outOfBounce = function(x, y) {
+        return this.grid.height <= y || this.grid.width <= x || x < 0 || y < 0;
 
     }
-}*/
+    this.isWall = function(x,y){
+        return this.grid.getNode(`${parseInt(y)}-${parseInt(x)}`).type === "wall";
+
+    }
+}
