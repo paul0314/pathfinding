@@ -790,3 +790,4 @@ function returnPossiblePathAndWall(orientation, width, height, offsetX, offsetY)
     }
     return possible.filter(array => array[1] % 2);
 }
+

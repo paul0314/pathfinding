@@ -78,8 +78,6 @@ class Grid{
 class Model{
     constructor() {
         this.grid = null;
-        this.start = null;
-        this.end = null;
     }
     commitNodeStatusChange(nodeId, oldStatus, newStatus){
         this.onNodeStatusChange(nodeId, oldStatus, newStatus);
@@ -98,10 +96,10 @@ class Model{
         let oldStatus = this.grid.getType(nodeId);
         if(oldStatus !== newNodeType){
             if(newNodeType === "start"){
-                this.start = `${nodeId}`;
+                this.grid.start = `${nodeId}`;
             }
             else if(newNodeType === "end"){
-                this.end = `${nodeId}`;
+                this.grid.end = `${nodeId}`;
             }
             this.grid.changeNodeType(nodeId, newNodeType);
             this.commitNodeTypeChange(nodeId, oldStatus, newNodeType);
@@ -113,13 +111,13 @@ class Model{
     setStart(newStartId){
         let oldStartType = this.grid.getType(newStartId);
         this.grid.changeNodeType(newStartId, "start");
-        this.start = `${newStartId}`;
+        this.grid.start = `${newStartId}`;
         this.commitNodeTypeChange(newStartId, oldStartType, "start");
     }
     setEnd(newEndId){
         let oldEndType = this.grid.getType(newEndId);
         this.grid.changeNodeType(newEndId, "end");
-        this.end = `${newEndId}`;
+        this.grid.end = `${newEndId}`;
         this.commitNodeTypeChange(newEndId, oldEndType, "end");
     }
     bindNodeStatusChanged(callback){
@@ -141,7 +139,7 @@ class Controller{
 
         this.weightNodes = ["sand", "water", "fire"];
         this.weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
-        this.speed = {slow: 5, medium: 2, fast: 0.5}
+        this.speeds = {slow: 5, medium: 2, fast: 0.5};
 
         this.algoDone = true;
         this.currSpeed = "medium";
@@ -151,14 +149,23 @@ class Controller{
         this.prevNode = null;
         this.prevNodeType = "none";
 
+        this.Algo = new Algo();
+        this.algoStrategy = null;
+
         let boardSize = this.view.calculateWidthAndHeight();
         let startEndIds = this.calculateInitialStartEnd(boardSize[0], boardSize[1]);
         this.model.initialize(boardSize[0], boardSize[1]);
         this.onReload(this.model.grid);
-        this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
-        this.model.bindNodeStatusChanged(this.onNodeStatusChanged);
+        this.initModelBinds();
         this.model.setNodeType(startEndIds[0], "start");
         this.model.setNodeType(startEndIds[1], "end");
+        this.initViewBinds();
+    }
+    initModelBinds(){
+        this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
+        this.model.bindNodeStatusChanged(this.onNodeStatusChanged);
+    }
+    initViewBinds(){
         this.view.bindClearBoard(this.handleClearBoard);
         this.view.bindClearWalls(this.handleClearWalls);
         this.view.bindClearWeights(this.handleClearWeights);
@@ -182,8 +189,24 @@ class Controller{
         this.view.bindMouseDown(this.handleMouseDown);
         this.view.bindMouseLeave(this.handleMouseLeave);
     }
-    handleVisualize = (eventEle) =>{
-        let deepGridCopy = this.deepCopyGrid(this.model.grid);
+    handleVisualize = () =>{
+        if(this.algoDone){
+            this.algoDone = false;
+            if (this.algoStrategy !== null){
+                let visitedAndPathNodes = this.Algo.calculateVisitedNodesAndPathInOrder(this.model.grid);
+                let visitedNodesInOrder = visitedAndPathNodes[0];
+                let pathNodesInOrder = visitedAndPathNodes[1];
+                this.clearPath();
+                this.animateAlgo(visitedNodesInOrder, pathNodesInOrder);
+            }
+            else{
+                this.algoDone = true;
+                let startBtn = this.view.getElement("startButton");
+                startBtn.innerHTML = `Pick an Algorithm!`;
+                console.log(this.model.grid);
+                console.log(this.model.grid.start);
+            }
+        }
     }
     handleClearWalls = () =>{
         this.clearWalls();
@@ -244,12 +267,26 @@ class Controller{
     handleNodeTypeSelected = (eventEle) =>{
         if(this.algoDone){
             this.selectedNodeType = `${eventEle.dataset.id}`;
-            eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
+            eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id}`;
         }
     }
     handleAlgoSelected = (eventEle) =>{
         if(this.algoDone){
-
+            let eventId = eventEle.dataset.id;
+            if(eventId === "Dijkstra"){
+                this.algoStrategy = new dijkstra();
+                this.Algo.setStrategy(this.algoStrategy);
+            }
+            if(eventId === "A* Euclidean"){
+                this.algoStrategy = new aStarEuclidean();
+                this.Algo.setStrategy(this.algoStrategy);
+            }
+            if(eventId === "A* Manhattan"){
+                this.algoStrategy = new aStarManhattan();
+                this.Algo.setStrategy(this.algoStrategy);
+            }
+            let startBtn = this.view.getElement("startButton");
+            startBtn.innerHTML = `Visualize ${eventId}!`;
         }
     }
     handleMouseDown = (nodeId) => {
@@ -278,7 +315,7 @@ class Controller{
             this.mouseDown = false;
             this.pressedNodeType = "none";
             this.prevNode = null;
-            this.prevNodeType = "none";
+            //this.prevNodeType = "none";
         }
     }
     handleMouseEnter = (nodeId) => {
@@ -327,9 +364,48 @@ class Controller{
         }
     }
     calculateInitialStartEnd(height, width){
-        let startId = `${Math.floor(height * 3 / 4)}-${Math.floor(width * 3 / 4)}`;
-        let endId = `${Math.floor(height / 4)}-${Math.floor(width / 4)}`;
+        let startId = `${Math.floor(height / 4)}-${Math.floor(width / 4)}`;
+        let endId = `${Math.floor(height * 3 / 4)}-${Math.floor(width * 3 / 4)}`;
         return [startId, endId];
+    }
+    animateAlgo(visitedNodes, pathNodes){
+        let startBtn = this.view.getElement("startButton");
+        startBtn.style.backgroundColor = "red";
+        //after entire animation set algoDone to true
+        let duration = this.calculateDuration(visitedNodes, pathNodes);
+        setTimeout(() => {
+            this.algoDone = true;
+            startBtn.style.backgroundColor = "limegreen";
+        }, duration);
+        this.animateVisitedNodes(visitedNodes);
+        //shortestPath animation (if path was found)
+        if(pathNodes.length > 1){
+            setTimeout(() => {
+                this.animatePathNodes(pathNodes);
+            }, 10 * this.speeds[`${this.currSpeed}`] * visitedNodes.length);
+        }
+    }
+    animateVisitedNodes(visitedNodes){
+        for(let i = 0; i < visitedNodes.length; i++){
+            setTimeout(() => {
+                const node = visitedNodes[i];
+                this.model.setNodeStatus(node.id, "visited");
+            }, 10 * i * this.speeds[`${this.currSpeed}`]);
+        }
+    }
+    animatePathNodes(pathNodes){
+        for(let i = 0; i < pathNodes.length; i++){
+            setTimeout(() => {
+                const node = pathNodes[i];
+                this.model.setNodeStatus(node.id, "shortestPath");
+            }, 50 * this.speeds[`${this.currSpeed}`] * i);
+        }
+    }
+    calculateDuration(visitedNodes, pathNodes){
+        let duration = 0;
+        duration += visitedNodes.length * this.speeds[`${this.currSpeed}`] * 10;
+        duration += pathNodes.length * 50 * this.speeds[`${this.currSpeed}`];
+        return duration;
     }
 }
 
@@ -534,8 +610,8 @@ function deepCopyGrid(grid){
     for(let row = 0; row < grid.height; row++){
         for(let col = 0; col < grid.width; col++){
             let currId = `${row}-${col}`;
-            newGrid.setNodeStatus(currId, grid.getStatus(currId));
-            newGrid.setNodeType(currId, grid.getType(currId));
+            newGrid.changeNodeStatus(currId, grid.getStatus(currId));
+            newGrid.changeNodeType(currId, grid.getType(currId));
         }
     }
     newGrid.setStart(grid.start);
@@ -557,10 +633,10 @@ function getAllNodes(grid){
 
 
 
-
+//all algorithms
 
 let Algo = function(){
-    this.algo = "";
+    this.algo = null;
 };
 
 Algo.prototype = {
@@ -570,7 +646,14 @@ Algo.prototype = {
     calculateVisitedNodesInOrder: function(grid){
         return this.algo.calculateVisitedNodesInOrder(grid);
     },
-    getNodesInShortestPathOrder: function(grid){
+    calculateVisitedNodesAndPathInOrder(paramGrid){
+        let grid = deepCopyGrid(paramGrid);
+        setupNodes(grid);
+        let visitedNodesInOrder = this.calculateVisitedNodesInOrder(grid);
+        let pathInOrder = this.getNodesInPathOrder(grid);
+        return [visitedNodesInOrder, pathInOrder];
+    },
+    getNodesInPathOrder: function(grid){
         const nodesInShortestPathOrder = [];
         let currentNode = grid.getNode(grid.end);
         while (currentNode != null){
@@ -582,9 +665,7 @@ Algo.prototype = {
 };
 
 let dijkstra = function(){
-    this.calculateVisitedNodesInOrder = function(paramGrid){
-        let grid = deepCopyGrid(paramGrid);
-        setupNodes(grid);
+    this.calculateVisitedNodesInOrder = function(grid){
         let startNode = grid.getNode(grid.start);
         let finishNode = grid.getNode(grid.end);
         const visitedNodesInOrder = [];
@@ -612,148 +693,8 @@ function sortNodesByDistance(nodes){
 }
 
 function getUnvisitedNeighbors(node, grid){
-    const neighbors = [];
-    const coordinates = node.id.split("-");
-    const row = parseInt(coordinates[0]);
-    const col = parseInt(coordinates[1]);
-    if(row > 0){
-        neighbors.push(grid.getNode(`${row - 1}-${col}`));
-    }
-    if(col > 0){
-        neighbors.push(grid.getNode(`${row}-${col - 1}`));
-    }
-    if(row < grid.height - 1){
-        neighbors.push(grid.getNode(`${row + 1}-${col}`));
-    }
-    if(col < grid.width - 1){
-        neighbors.push(grid.getNode(`${row}-${col + 1}`));
-    }
-
+    let neighbors = getNeighbors(node, grid);
     return neighbors.filter(neighbor => !neighbor.visited);
-}
-
-function updateUnvisitedNeighbors(node, grid){
-    const unvisitedNeighbors = getUnvisitedNeighbors(node, grid);
-    for(const neighbor of unvisitedNeighbors){
-        neighbor.distance = node.distance + neighbor.weight + 1;
-        neighbor.previousNode = node;
-    }
-}
-
-
-let aStarManhattan = function(){
-    this.calculateVisitedNodesInOrder = function (paramGrid) {
-        let grid = deepCopyGrid(paramGrid);
-        setupNodes(grid);
-        let startNode = grid.getNode(grid.start);
-        let finishNode = grid.getNode(grid.end);
-        const openList = [];
-        const visitedNodesInOrder = [];
-        openList.push(grid.getNode(grid.start));
-        startNode.distance = 0;
-        while (!!openList.length) {
-            sortNodesAStar(openList, "manhattan");
-            const currNode = openList.shift();
-            visitedNodesInOrder.push(currNode);
-            if (currNode.type === "wall") continue;
-            if (currNode.distance === Infinity) {
-                return visitedNodesInOrder;
-            }
-            currNode.visited = true;
-            if (currNode === finishNode) {
-                return visitedNodesInOrder;
-            }
-            let toAdd = updateNeighborsAStar(currNode, grid);
-            for (const node of toAdd) {
-                if (!openList.includes(node)) {
-                    openList.push(node);
-                }
-            }
-        }
-        return visitedNodesInOrder;
-    }
-}
-
-function manhattanDistToEndNode(node){
-    let splitEndId = grid.end.split("-");
-    let yEnd = splitEndId[0];
-    let xEnd = splitEndId[1];
-    let splitNodeId = node.id.split("-");
-    let yNode = splitNodeId[0];
-    let xNode= splitNodeId[1];
-
-    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
-}
-
-let aStarEuclidean = function(){
-    this.calculateVisitedNodesInOrder = function (paramGrid) {
-        let grid = deepCopyGrid(paramGrid);
-        setupNodes(grid);
-        let startNode = grid.getNode(grid.start);
-        let finishNode = grid.getNode(grid.end);
-        const openList = [];
-        const visitedNodesInOrder = [];
-        openList.push(grid.getNode(grid.start));
-        startNode.distance = 0;
-        while (!!openList.length) {
-            sortNodesAStar(openList, "euclidean");
-            const currNode = openList.shift();
-            visitedNodesInOrder.push(currNode);
-            if (currNode.type === "wall") continue;
-            if (currNode.distance === Infinity) {
-                return visitedNodesInOrder;
-            }
-            currNode.visited = true;
-            if (currNode === finishNode) {
-                return visitedNodesInOrder;
-            }
-            let toAdd = updateNeighborsAStar(currNode, grid);
-            for (const node of toAdd) {
-                if (!openList.includes(node)) {
-                    openList.push(node);
-                }
-            }
-        }
-        return visitedNodesInOrder;
-    }
-}
-
-function euclDistToEndNode(node){
-    let splitEndId = grid.end.split("-");
-    let yEnd = parseInt(splitEndId[0]);
-    let xEnd = parseInt(splitEndId[1]);
-    let splitNodeId = node.id.split("-");
-    let yNode = parseInt(splitNodeId[0]);
-    let xNode= parseInt(splitNodeId[1]);
-
-    return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
-}
-
-function sortNodesAStar(nodes, distanceMeasure){
-    if(distanceMeasure === "euclidean"){
-        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA) - nodeB.distance - euclDistToEndNode(nodeB));
-    }
-    else{
-        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA) - nodeB.distance - manhattanDistToEndNode(nodeB));
-    }
-}
-
-function updateNeighborsAStar(node, grid) {
-    const neighbors = getNeighbors(node, grid);
-    const filteredNeighbors = [];
-    for(const neighbor of neighbors){
-        if(!neighbor.visited){
-            neighbor.distance = node.distance + neighbor.weight + 1;
-            neighbor.previousNode = node;
-            filteredNeighbors.push(neighbor);
-        }
-        else if(neighbor.distance > node.distance + neighbor.weight + 1){
-            neighbor.distance = node.distance + neighbor.weight + 1;
-            neighbor.previousNode = node;
-            filteredNeighbors.push(neighbor);
-        }
-    }
-    return filteredNeighbors;
 }
 
 function getNeighbors(node, grid){
@@ -776,3 +717,110 @@ function getNeighbors(node, grid){
 
     return neighbors;
 }
+
+function updateUnvisitedNeighbors(node, grid){
+    const unvisitedNeighbors = getUnvisitedNeighbors(node, grid);
+    for(const neighbor of unvisitedNeighbors){
+        neighbor.distance = node.distance + neighbor.weight + 1;
+        neighbor.previousNode = node;
+    }
+}
+
+function aStar(grid, distanceMeasure){
+    let startNode = grid.getNode(grid.start);
+    let finishNode = grid.getNode(grid.end);
+    const openList = [];
+    const visitedNodesInOrder = [];
+    openList.push(grid.getNode(grid.start));
+    startNode.distance = 0;
+    while (!!openList.length) {
+        sortNodesAStar(openList, distanceMeasure, grid.end);
+        const currNode = openList.shift();
+        visitedNodesInOrder.push(currNode);
+        if (currNode.type === "wall") continue;
+        if (currNode.distance === Infinity) {
+            return visitedNodesInOrder;
+        }
+        currNode.visited = true;
+        if (currNode === finishNode) {
+            return visitedNodesInOrder;
+        }
+        let toAdd = updateNeighborsAStar(currNode, grid);
+        for (const node of toAdd) {
+            if (!openList.includes(node)) {
+                openList.push(node);
+            }
+        }
+    }
+    return visitedNodesInOrder;
+}
+
+
+let aStarManhattan = function(){
+    this.calculateVisitedNodesInOrder = function (paramGrid) {
+        return aStar(paramGrid, "manhattan");
+    }
+}
+
+function manhattanDistToEndNode(node, endId){
+    let splitEndId = endId.split("-");
+    let yEnd = parseInt(splitEndId[0]);
+    let xEnd = parseInt(splitEndId[1]);
+    let splitNodeId = node.id.split("-");
+    let yNode = parseInt(splitNodeId[0]);
+    let xNode= parseInt(splitNodeId[1]);
+
+    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
+}
+
+let aStarEuclidean = function(){
+    this.calculateVisitedNodesInOrder = function (paramGrid) {
+        return aStar(paramGrid, "euclidean");
+    }
+}
+
+function euclDistToEndNode(node, endId){
+    let splitEndId = endId.split("-");
+    let yEnd = parseInt(splitEndId[0]);
+    let xEnd = parseInt(splitEndId[1]);
+    let splitNodeId = node.id.split("-");
+    let yNode = parseInt(splitNodeId[0]);
+    let xNode= parseInt(splitNodeId[1]);
+
+    return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
+}
+
+function sortNodesAStar(nodes, distanceMeasure, endId){
+    if(distanceMeasure === "euclidean"){
+        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA, endId) - nodeB.distance - euclDistToEndNode(nodeB, endId));
+    }
+    else{
+        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA, endId) - nodeB.distance - manhattanDistToEndNode(nodeB, endId));
+    }
+}
+
+function updateNeighborsAStar(node, grid) {
+    const neighbors = getNeighbors(node, grid);
+    const filteredNeighbors = [];
+    for(const neighbor of neighbors){
+        if(!neighbor.visited){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+        else if(neighbor.distance > node.distance + neighbor.weight + 1){
+            neighbor.distance = node.distance + neighbor.weight + 1;
+            neighbor.previousNode = node;
+            filteredNeighbors.push(neighbor);
+        }
+    }
+    return filteredNeighbors;
+}
+
+//maze algos ab hier
+
+/*let recursiveDivision = function(){
+    this.calculateVisitedNodesInOrder = function (paramGrid) {
+
+    }
+}*/

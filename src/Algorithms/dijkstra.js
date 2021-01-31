@@ -68,7 +68,7 @@ function updateUnvisitedNeighbors(node, grid){
     }
 }
 
-function getNodesInShortestPathOrder(finishNode){
+function getNodesInPathOrder(finishNode){
     const nodesInShortestPathOrder = [];
     let currentNode = finishNode;
     while (currentNode != null){
