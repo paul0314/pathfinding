@@ -351,7 +351,7 @@ class Controller{
             this.mouseDown = false;
             this.pressedNodeType = "none";
             this.prevNode = null;
-            //this.prevNodeType = "none";
+            this.prevNodeType = "none";
         }
     }
     handleMouseEnter = (nodeId) => {
