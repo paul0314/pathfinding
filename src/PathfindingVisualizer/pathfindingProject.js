@@ -331,6 +331,7 @@ class Controller{
             let currNode = this.model.getNode(nodeId);
             this.pressedNodeType = currNode.type;
             this.prevNode = this.model.getNode(nodeId);
+            this.clearPath();
             if(currNode.type !== "end" && currNode.type !== "start"){
                 this.changeNormalNode(currNode);
             }
