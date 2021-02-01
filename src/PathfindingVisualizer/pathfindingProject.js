@@ -311,7 +311,7 @@ class Controller{
     animateMaze(wallNodes){
         let startBtn = this.view.getElement("startButton");
         startBtn.style.backgroundColor = "red";
-        let duration = wallNodes.length * 75 * this.speeds[`${this.currSpeed}`];
+        let duration = wallNodes.length * 20 * this.speeds[`${this.currSpeed}`];
         setTimeout(() => {
             this.algoDone = true;
             startBtn.style.backgroundColor = "limegreen";
@@ -322,7 +322,7 @@ class Controller{
                 if(this.model.grid.start !== node.id && this.model.grid.end !== node.id){
                     this.model.setNodeType(node.id, "wall");
                 }
-            }, 75 * i * this.speeds[`${this.currSpeed}`]);
+            }, 20 * i * this.speeds[`${this.currSpeed}`]);
         }
     }
     handleMouseDown = (nodeId) => {
