@@ -141,7 +141,7 @@ class Controller{
         this.speeds = {slow: 5, medium: 2, fast: 0.5};
 
         this.algoDone = true;
-        this.currSpeed = "medium";
+        this.currSpeed = "fast";
         this.selectedNodeType = "wall";
         this.mouseDown = false;
         this.pressedNodeType = "none";
@@ -183,6 +183,7 @@ class Controller{
     }
     onReload = grid => {
         this.view.displayGrid(grid);
+        this.view.setupTutorial();
         this.view.setupDropdowns();
         this.view.bindMouseEnter(this.handleMouseEnter);
         this.view.bindMouseUp(this.handleMouseUp);
@@ -456,6 +457,7 @@ class View{
         this.selectAlgo = this.getElement("selectAlgo");
         this.height = 0;
         this.width = 0;
+        this.currExplTab = 0;
     }
 
     bindClearBoard(handler){
@@ -591,6 +593,56 @@ class View{
     }
     getAllElements(selector){
         return document.querySelectorAll(selector);
+    }
+    setupTutorial(){
+        let tutorialContent =
+            [`<h1>Pathfinding Visualizer Tutorial</h1><h3>Use this short tutorial in order to get used to this website!</h3><h4>If you're ready click on <b>"Start Tutorial"!</b></h4>`,
+                `<h1>Motivation and general idea</h1><h3>This website was created in order to visualize different pathfinding algorithms and maze patterns.</h3><h4>Moving from a cell to a neighboring cell has a <b>cost of 1</b>. Depending on the node type of the neighboring cell this cost increases to <b>1 + the weight of the neighboring node</b>. Diagonal movement is not allowed and walls are impenetrable.</h4>`,
+                `<h1>Picking an algorithm</h1><h3>Choose the algorithm to visualize from the <b>"Algorithms" dropdown menu</b>. Then click on the <b>"Visualize" button</b>.</h3><h4>Alternatively choose a maze pattern first from the <b>"Mazes" dropdown menu</b> for more interesting path visualizations afterwards.</h4>`,
+                `<h1>Algorithms and Mazes</h1><h4><b>Dijkstra's algorithm:</b> Guarantees shortest path</h4><h4><b>A* algorithm:</b> A* uses heuristics to find the shortest path. The heuristic calculation is done using either the manhattan or the euclidean distance.</h4><h4><b>Recursive Division:</b> Recursively divides the grid into a maze structure.</h4>`,
+                `<h1>Adding and moving nodes</h1><h3>Click on the grid in order to add the currently selected node type to the clicked cell. The node type can be selected inside the "Node" dropdown menu. Start and finish nodes can each be moved by clicking and then dragging.</h3>`,
+                `<h1>Clear</h1><h3>Use the <b>"Clear" dropdown menu</b> to quickly clear the path / the weights / the walls or everything.</h3>`,
+                `<h1>Unsatisfied with the Speed?</h1><h3>Use the <b>"Speed" dropdown menu</b> to quickly change the speed to your liking.</h3>`,
+                `<h1>Now, play around!</h1><h3>Try different visualizations and have fun! The source code can be found on my <a href="https://github.com/paul0314/pathfinding" id="github">github</a>.</h3>`];
+        const maxTabIndex = 7;
+        let parView = this;
+        let prevExplBtn = this.getElement("prevExplBtn");
+        let nextExplBtn = this.getElement("nextExplBtn");
+        let closeExplBtn = this.getElement("closeExpl");
+        let explContent = this.getElement("explanation-content");
+        let explTab = this.getElement("explTab");
+
+        nextExplBtn.addEventListener("click", function () {
+            if(parView.currExplTab === 0){
+                prevExplBtn.classList.remove("hideBtn");
+                nextExplBtn.innerHTML = "next";
+            }
+            parView.currExplTab += 1;
+            if(parView.currExplTab === maxTabIndex){
+                nextExplBtn.classList.add("hideBtn");
+            }
+            explContent.innerHTML = tutorialContent[parView.currExplTab];
+        });
+
+        prevExplBtn.addEventListener("click", function () {
+            if(parView.currExplTab === maxTabIndex){
+                nextExplBtn.classList.remove("hideBtn");
+            }
+            parView.currExplTab -= 1;
+            if(parView.currExplTab === 0){
+                prevExplBtn.classList.add("hideBtn");
+                nextExplBtn.innerHTML = "Start tutorial";
+            }
+            explContent.innerHTML = tutorialContent[parView.currExplTab];
+        });
+
+        closeExplBtn.addEventListener("click", function () {
+            explTab.classList.remove("open-explanation");
+        });
+
+        explContent.innerHTML = tutorialContent[this.currExplTab];
+        nextExplBtn.innerHTML = "Start tutorial";
+        prevExplBtn.innerHTML = "previous";
     }
     setupDropdowns(){
         const dropdownBtns = this.getAllElements(".dropdown-toggle");
