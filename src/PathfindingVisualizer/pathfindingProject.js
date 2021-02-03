@@ -304,8 +304,27 @@ class Controller{
                 //animation sets algoDone to true
                 this.animateMaze(wallNodes);
             }
+            else if(eventId === "Randomly Initialize"){
+                this.randomlyInitialize();
+                this.algoDone = true;
+            }
             else{
                 this.algoDone = true;
+            }
+        }
+    }
+    randomlyInitialize(){
+        this.clearBoard();
+        for(let row = 0; row < this.model.grid.height; row++){
+            for(let col = 0; col < this.model.grid.width; col++){
+                let currId = `${row}-${col}`;
+                let possibleNodes = this.weightNodes.concat();
+                possibleNodes.push("none");
+                possibleNodes.push("wall");
+                let numberOfNodeTypes = possibleNodes.length;
+                if(this.model.grid.start !== currId && this.model.grid.end !== currId){
+                    this.model.setNodeType(currId, possibleNodes[Math.floor(Math.random() * numberOfNodeTypes)]);
+                }
             }
         }
     }
@@ -598,13 +617,13 @@ class View{
         let tutorialContent =
             [`<h1>Pathfinding Visualizer Tutorial</h1><h3>Use this short tutorial in order to get used to this website!</h3><h4>If you're ready click on <b>"Start Tutorial"!</b></h4>`,
                 `<h1>Motivation and general idea</h1><h3>This website was created in order to visualize different pathfinding algorithms and maze patterns.</h3><h4>Moving from a cell to a neighboring cell has a <b>cost of 1</b>. Depending on the node type of the neighboring cell this cost increases to <b>1 + the weight of the neighboring node</b>. Diagonal movement is not allowed and walls are impenetrable.</h4>`,
-                `<h1>Picking an algorithm</h1><h3>Choose the algorithm to visualize from the <b>"Algorithms" dropdown menu</b>. Then click on the <b>"Visualize" button</b>.</h3><h4>Alternatively choose a maze pattern first from the <b>"Mazes" dropdown menu</b> for more interesting path visualizations afterwards.</h4>`,
-                `<h1>Algorithms and Mazes</h1><h4><b>Dijkstra's algorithm:</b> Guarantees shortest path</h4><h4><b>A* algorithm:</b> A* uses heuristics to find the shortest path. The heuristic calculation is done using either the manhattan or the euclidean distance.</h4><h4><b>Recursive Division:</b> Recursively divides the grid into a maze structure.</h4>`,
+                `<h1>Picking an algorithm</h1><h3>Choose the algorithm to visualize from the <b>"Algorithms" dropdown menu</b>. Then click on the <b>"Visualize" button</b>.</h3><h4>Alternatively choose a maze pattern first from the <b>"Mazes & Patterns" dropdown menu</b> for more interesting visualizations.</h4>`,
+                `<h1>Algorithms and Mazes</h1><h5><b>Dijkstra's algorithm:</b> Guarantees shortest path</h5><h5><b>A* algorithm:</b> A* uses heuristics to find the shortest path. The heuristic calculation is done using either the manhattan or the euclidean distance.</h5><h5><b>Recursive Division:</b> Recursively divides the grid into a maze structure.</h5><h5><b>Randomly Initialize:</b> Initializes every node type randomly.</h5>`,
                 `<h1>Adding and moving nodes</h1><h3>Click on the grid in order to add the currently selected node type to the clicked cell. The node type can be selected inside the "Node" dropdown menu. Start and finish nodes can each be moved by clicking and then dragging.</h3>`,
                 `<h1>Clear</h1><h3>Use the <b>"Clear" dropdown menu</b> to quickly clear the path / the weights / the walls or everything.</h3>`,
                 `<h1>Unsatisfied with the Speed?</h1><h3>Use the <b>"Speed" dropdown menu</b> to quickly change the speed to your liking.</h3>`,
                 `<h1>Now, play around!</h1><h3>Try different visualizations and have fun! The source code can be found on my <a href="https://github.com/paul0314/pathfinding" id="github">github</a>.</h3>`];
-        const maxTabIndex = 7;
+        const maxTabIndex = tutorialContent.length - 1;
         let parView = this;
         let prevExplBtn = this.getElement("prevExplBtn");
         let nextExplBtn = this.getElement("nextExplBtn");

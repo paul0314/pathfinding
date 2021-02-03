@@ -241,6 +241,7 @@ td{
     border-radius: 1rem;
     width: 90vw;
     min-height: 30vh;
+    max-height: 90vh;
     max-width: 1170px;
     text-align: center;
     display: inline-block;
@@ -288,4 +289,22 @@ td{
 
 #github{
     color: limegreen;
+}
+
+@media all and (max-width: 768px) {
+    h1{
+        font-size: 120%;
+    }
+    h2{
+        font-size: 90%;
+    }
+    h3{
+        font-size: 80%;
+    }
+    h4{
+        font-size: 72%;
+    }
+    h5{
+        font-size: 65%;
+    }
 }
