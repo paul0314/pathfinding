@@ -288,6 +288,10 @@ class Controller{
                 this.algoStrategy = new aStarManhattan();
                 this.Algo.setStrategy(this.algoStrategy);
             }
+            if(eventId === "Bidirectional"){
+                this.algoStrategy = new bidirectional();
+                this.Algo.setStrategy(this.algoStrategy);
+            }
             let startBtn = this.view.getElement("startButton");
             startBtn.innerHTML = `Visualize ${eventId}!`;
         }
@@ -618,7 +622,8 @@ class View{
             [`<h1>Pathfinding Visualizer Tutorial</h1><h3>Use this short tutorial in order to get used to this website!</h3><h4>If you're ready click on <b>"Start Tutorial"!</b></h4>`,
                 `<h1>Motivation and general idea</h1><h3>This website was created in order to visualize different pathfinding algorithms and maze patterns.</h3><h4>Moving from a cell to a neighboring cell has a <b>cost of 1</b>. Depending on the node type of the neighboring cell this cost increases to <b>1 + the weight of the neighboring node</b>. Diagonal movement is not allowed and walls are impenetrable.</h4>`,
                 `<h1>Picking an algorithm</h1><h3>Choose the algorithm to visualize from the <b>"Algorithms" dropdown menu</b>. Then click on the <b>"Visualize" button</b>.</h3><h4>Alternatively choose a maze pattern first from the <b>"Mazes & Patterns" dropdown menu</b> for more interesting visualizations.</h4>`,
-                `<h1>Algorithms and Mazes</h1><h5><b>Dijkstra's algorithm:</b> Guarantees shortest path</h5><h5><b>A* algorithm:</b> A* uses heuristics to find the shortest path. The heuristic calculation is done using either the manhattan or the euclidean distance.</h5><h5><b>Recursive Division:</b> Recursively divides the grid into a maze structure.</h5><h5><b>Randomly Initialize:</b> Initializes every node type randomly.</h5>`,
+                `<h1>Algorithms</h1><h5><b>Dijkstra's algorithm:</b> Guarantees shortest path</h5><h5><b>Bidirectional algorithm:</b> Dijkstra's algorithm but bidirectional. Guarantees shortest path.</h5><h5><b>A* algorithm:</b> A* uses heuristics to find the shortest path. The heuristic calculation is done using either the manhattan or the euclidean distance.</h5>`,
+                `<h1>Mazes and Patterns</h1><h5><b>Recursive Division:</b> Recursively divides the grid into a maze structure.</h5><h5><b>Randomly Initialize:</b> Initializes every node type of each node randomly.</h5>`,
                 `<h1>Adding and moving nodes</h1><h3>Click on the grid in order to add the currently selected node type to the clicked cell. The node type can be selected inside the "Node" dropdown menu. Start and finish nodes can each be moved by clicking and then dragging.</h3>`,
                 `<h1>Clear</h1><h3>Use the <b>"Clear" dropdown menu</b> to quickly clear the path / the weights / the walls or everything.</h3>`,
                 `<h1>Unsatisfied with the Speed?</h1><h3>Use the <b>"Speed" dropdown menu</b> to quickly change the speed to your liking.</h3>`,
@@ -771,17 +776,11 @@ Algo.prototype = {
         let grid = deepCopyGrid(paramGrid);
         setupNodes(grid);
         let visitedNodesInOrder = this.calculateVisitedNodesInOrder(grid);
-        let pathInOrder = this.getNodesInPathOrder(grid);
+        let pathInOrder = this.getNodesInPathOrder(visitedNodesInOrder[visitedNodesInOrder.length - 1]);
         return [visitedNodesInOrder, pathInOrder];
     },
-    getNodesInPathOrder: function(grid){
-        const nodesInShortestPathOrder = [];
-        let currentNode = grid.getNode(grid.end);
-        while (currentNode != null){
-            nodesInShortestPathOrder.unshift(currentNode);
-            currentNode = currentNode.previousNode;
-        }
-        return nodesInShortestPathOrder;
+    getNodesInPathOrder: function(lastNode){
+        return this.algo.getNodesInPathOrder(lastNode);
     }
 };
 
@@ -796,7 +795,6 @@ let dijkstra = function(){
         while(!!unvisitedNodes.length){
             sortNodesByDistance(unvisitedNodes);
             const closestNode = unvisitedNodes.shift();
-            if(closestNode.type === "wall") continue;
             if(closestNode.distance === Infinity){
                 return visitedNodesInOrder;
             }
@@ -806,6 +804,15 @@ let dijkstra = function(){
             }
             updateUnvisitedNeighbors(closestNode, grid);
         }
+    }
+    this.getNodesInPathOrder = function(lastNode){
+        const nodesInShortestPathOrder = [];
+        let currentNode = lastNode;
+        while (currentNode != null){
+            nodesInShortestPathOrder.unshift(currentNode);
+            currentNode = currentNode.previousNode;
+        }
+        return nodesInShortestPathOrder;
     }
 }
 
@@ -882,6 +889,15 @@ let aStarManhattan = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
         return aStar(paramGrid, "manhattan");
     }
+    this.getNodesInPathOrder = function(lastNode){
+        const nodesInShortestPathOrder = [];
+        let currentNode = lastNode;
+        while (currentNode != null){
+            nodesInShortestPathOrder.unshift(currentNode);
+            currentNode = currentNode.previousNode;
+        }
+        return nodesInShortestPathOrder;
+    }
 }
 
 function manhattanDistToEndNode(node, endId){
@@ -898,6 +914,15 @@ function manhattanDistToEndNode(node, endId){
 let aStarEuclidean = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
         return aStar(paramGrid, "euclidean");
+    }
+    this.getNodesInPathOrder = function(lastNode){
+        const nodesInShortestPathOrder = [];
+        let currentNode = lastNode;
+        while (currentNode != null){
+            nodesInShortestPathOrder.unshift(currentNode);
+            currentNode = currentNode.previousNode;
+        }
+        return nodesInShortestPathOrder;
     }
 }
 
@@ -937,6 +962,112 @@ function updateNeighborsAStar(node, grid) {
         }
     }
     return filteredNeighbors;
+}
+
+
+let bidirectional = function(){
+    this.calculateVisitedNodesInOrder = function(grid){
+        this.setupGridBidirectional(grid);
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const visitedNodesInOrder = [];
+        const unvisitedNodesForward = getAllNodes(grid);
+        const unvisitedNodesBackward = getAllNodes(grid);
+        startNode.forwardDistance = 0;
+        startNode.forwardVisited = true;
+        finishNode.backwardDistance = 0;
+        finishNode.backwardVisited = true;
+        while(!!unvisitedNodesForward.length && !!unvisitedNodesBackward.length){
+            sortNodesByForwardDistance(unvisitedNodesForward);
+            sortNodesByBackwardDistance(unvisitedNodesBackward);
+            const closestNodeForward = unvisitedNodesForward.shift();
+            const closestNodeBackward = unvisitedNodesBackward.shift();
+            if(closestNodeForward.forwardDistance === Infinity || closestNodeBackward.backwardDistance === Infinity){
+                return visitedNodesInOrder;
+            }
+            visitedNodesInOrder.push(closestNodeForward);
+            visitedNodesInOrder.push(closestNodeBackward);
+            if(!!closestNodeForward.backwardVisited || !!closestNodeBackward.forwardVisited){
+                return visitedNodesInOrder;
+            }
+            updateUnvisitedNeighborsForward(closestNodeForward, grid);
+            updateUnvisitedNeighborsBackward(closestNodeBackward, grid);
+        }
+    }
+
+    this.getNodesInPathOrder = function(lastNode){
+        const nodesInShortestPathOrder = [];
+        let currentNode = lastNode;
+        let forwardNode = lastNode.previousForwardNode;
+        let backwardNode = lastNode.previousBackwardNode;
+        if(currentNode !== null){
+            nodesInShortestPathOrder.unshift(currentNode);
+        }
+        while (forwardNode !== null && backwardNode !== null){
+            nodesInShortestPathOrder.unshift(forwardNode);
+            nodesInShortestPathOrder.unshift(backwardNode);
+            forwardNode = forwardNode.previousForwardNode;
+            backwardNode = backwardNode.previousBackwardNode;
+        }
+        while(forwardNode !== null){
+            nodesInShortestPathOrder.unshift(forwardNode);
+            forwardNode = forwardNode.previousForwardNode;
+        }
+        while(backwardNode !== null){
+            nodesInShortestPathOrder.unshift(backwardNode);
+            backwardNode = backwardNode.previousBackwardNode;
+        }
+        return nodesInShortestPathOrder;
+    }
+    this.setupGridBidirectional = function(grid){
+        for(let row = 0; row < grid.height; row++){
+            for(let col = 0; col < grid.width; col++) {
+                let currId = `${row}-${col}`;
+                let currNode = grid.getNode(currId);
+                currNode.previousForwardNode = null;
+                currNode.previousBackwardNode = null;
+                currNode.forwardDistance = Infinity;
+                currNode.backwardDistance = Infinity;
+                currNode.forwardVisited = false;
+                currNode.backwardVisited = false;
+            }
+        }
+    }
+}
+
+function sortNodesByForwardDistance(nodes){
+    nodes.sort((nodeA, nodeB) => nodeA.forwardDistance - nodeB.forwardDistance);
+}
+function sortNodesByBackwardDistance(nodes){
+    nodes.sort((nodeA, nodeB) => nodeA.backwardDistance - nodeB.backwardDistance);
+}
+
+function getUnvisitedNeighborsForward(node, grid){
+    let neighbors = getNeighbors(node, grid);
+    return neighbors.filter(neighbor => !neighbor.forwardVisited);
+}
+
+function getUnvisitedNeighborsBackward(node, grid){
+    let neighbors = getNeighbors(node, grid);
+    return neighbors.filter(neighbor => !neighbor.backwardVisited);
+}
+
+function updateUnvisitedNeighborsBackward(node, grid){
+    const unvisitedNeighbors = getUnvisitedNeighborsBackward(node, grid);
+    for(const neighbor of unvisitedNeighbors){
+        neighbor.backwardDistance = node.backwardDistance + neighbor.weight + 1;
+        neighbor.previousBackwardNode = node;
+        neighbor.backwardVisited = true;
+    }
+}
+
+function updateUnvisitedNeighborsForward(node, grid){
+    const unvisitedNeighbors = getUnvisitedNeighborsForward(node, grid);
+    for(const neighbor of unvisitedNeighbors){
+        neighbor.forwardDistance = node.forwardDistance + neighbor.weight + 1;
+        neighbor.previousForwardNode = node;
+        neighbor.forwardVisited = true;
+    }
 }
 
 
