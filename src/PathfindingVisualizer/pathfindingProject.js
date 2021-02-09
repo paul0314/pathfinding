@@ -792,6 +792,7 @@ Algo.prototype = {
 
 let dijkstra = function(){
     this.calculateVisitedNodesInOrder = function(grid){
+        this.sucessfull = false;
         let startNode = grid.getNode(grid.start);
         let finishNode = grid.getNode(grid.end);
         const visitedNodesInOrder = [];
@@ -863,40 +864,10 @@ function updateUnvisitedNeighbors(node, grid){
     }
 }
 
-function aStar(grid, distanceMeasure){
-    let startNode = grid.getNode(grid.start);
-    let finishNode = grid.getNode(grid.end);
-    const openList = [];
-    const visitedNodesInOrder = [];
-    openList.push(grid.getNode(grid.start));
-    startNode.distance = 0;
-    while (!!openList.length) {
-        sortNodesAStar(openList, distanceMeasure, grid.end);
-        const currNode = openList.shift();
-        visitedNodesInOrder.push(currNode);
-        if (currNode.type === "wall") continue;
-        if (currNode.distance === Infinity) {
-            return visitedNodesInOrder;
-        }
-        currNode.visited = true;
-        if (currNode === finishNode) {
-            this.successfull = true;
-            return visitedNodesInOrder;
-        }
-        let toAdd = updateNeighborsAStar(currNode, grid);
-        for (const node of toAdd) {
-            if (!openList.includes(node)) {
-                openList.push(node);
-            }
-        }
-    }
-    return visitedNodesInOrder;
-}
-
 
 let aStarManhattan = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
-        return aStar(paramGrid, "manhattan");
+        return this.aStar(paramGrid);
     }
     this.getNodesInPathOrder = function(lastNode){
         const nodesInShortestPathOrder = [];
@@ -906,6 +877,36 @@ let aStarManhattan = function(){
             currentNode = currentNode.previousNode;
         }
         return nodesInShortestPathOrder;
+    }
+    this.aStar = function (grid){
+        this.successfull = false;
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const openList = [];
+        const visitedNodesInOrder = [];
+        openList.push(grid.getNode(grid.start));
+        startNode.distance = 0;
+        while (!!openList.length) {
+            sortNodesAStar(openList, "manhattan", grid.end);
+            const currNode = openList.shift();
+            visitedNodesInOrder.push(currNode);
+            if (currNode.type === "wall") continue;
+            if (currNode.distance === Infinity) {
+                return visitedNodesInOrder;
+            }
+            currNode.visited = true;
+            if (currNode === finishNode) {
+                this.successfull = true;
+                return visitedNodesInOrder;
+            }
+            let toAdd = updateNeighborsAStar(currNode, grid);
+            for (const node of toAdd) {
+                if (!openList.includes(node)) {
+                    openList.push(node);
+                }
+            }
+        }
+        return visitedNodesInOrder;
     }
     this.successfull = false;
 }
@@ -923,7 +924,7 @@ function manhattanDistToEndNode(node, endId){
 
 let aStarEuclidean = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
-        return aStar(paramGrid, "euclidean");
+        return this.aStar(paramGrid);
     }
     this.getNodesInPathOrder = function(lastNode){
         const nodesInShortestPathOrder = [];
@@ -933,6 +934,36 @@ let aStarEuclidean = function(){
             currentNode = currentNode.previousNode;
         }
         return nodesInShortestPathOrder;
+    }
+    this.aStar = function (grid){
+        this.successfull = false;
+        let startNode = grid.getNode(grid.start);
+        let finishNode = grid.getNode(grid.end);
+        const openList = [];
+        const visitedNodesInOrder = [];
+        openList.push(grid.getNode(grid.start));
+        startNode.distance = 0;
+        while (!!openList.length) {
+            sortNodesAStar(openList, "euclidean", grid.end);
+            const currNode = openList.shift();
+            visitedNodesInOrder.push(currNode);
+            if (currNode.type === "wall") continue;
+            if (currNode.distance === Infinity) {
+                return visitedNodesInOrder;
+            }
+            currNode.visited = true;
+            if (currNode === finishNode) {
+                this.successfull = true;
+                return visitedNodesInOrder;
+            }
+            let toAdd = updateNeighborsAStar(currNode, grid);
+            for (const node of toAdd) {
+                if (!openList.includes(node)) {
+                    openList.push(node);
+                }
+            }
+        }
+        return visitedNodesInOrder;
     }
     this.successfull = false;
 }
@@ -979,6 +1010,7 @@ function updateNeighborsAStar(node, grid) {
 let bidirectional = function(){
     this.calculateVisitedNodesInOrder = function(grid){
         this.setupGridBidirectional(grid);
+        this.successfull = false;
         let startNode = grid.getNode(grid.start);
         let finishNode = grid.getNode(grid.end);
         const visitedNodesInOrder = [];
@@ -998,8 +1030,14 @@ let bidirectional = function(){
             }
             visitedNodesInOrder.push(closestNodeForward);
             visitedNodesInOrder.push(closestNodeBackward);
-            if(!!closestNodeForward.backwardVisited || !!closestNodeBackward.forwardVisited){
+            if(!!closestNodeForward.backwardVisited){
                 this.successfull = true;
+                this.lastNode = closestNodeForward;
+                return visitedNodesInOrder;
+            }
+            if(!!closestNodeBackward.forwardVisited){
+                this.successfull = true;
+                this.lastNode = closestNodeBackward;
                 return visitedNodesInOrder;
             }
             updateUnvisitedNeighborsForward(closestNodeForward, grid);
@@ -1007,11 +1045,12 @@ let bidirectional = function(){
         }
     }
     this.successfull = false;
+    this.lastNode = null;
     this.getNodesInPathOrder = function(lastNode){
         const nodesInShortestPathOrder = [];
-        let currentNode = lastNode;
-        let forwardNode = lastNode.previousForwardNode;
-        let backwardNode = lastNode.previousBackwardNode;
+        let currentNode = this.lastNode;
+        let forwardNode = this.lastNode.previousForwardNode;
+        let backwardNode = this.lastNode.previousBackwardNode;
         if(currentNode !== null){
             nodesInShortestPathOrder.unshift(currentNode);
         }
