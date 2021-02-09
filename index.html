@@ -12,105 +12,105 @@
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <nav id="nav">
-        <div class="navbar-header">
-            <a href="#" id="refreshButton" class="container-title">Pathfinding Visualizer</a>
+        <a href="#" id="refreshButton" class="container-title">Pathfinding Visualizer</a>
+        <div class="navbar-nav-wrapper">
+            <ul class="navbar-nav">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-id="dropdown" href="#">
+                        Algorithms
+                    </a>
+                    <ul class="dropdown-content" id="selectAlgo">
+                        <li id="startButtonDijkstra" data-id="Dijkstra" class="navbar-drop-item">
+                            <a href="#">Dijkstra</a>
+                        </li>
+                        <li id="startButtonDijkstraBidirectional" data-id="Bidirectional" class="navbar-drop-item">
+                            <a href="#">Bidirectional</a>
+                        </li>
+                        <li id="startButtonAStarEuclid" data-id="A* Euclidean" class="navbar-drop-item">
+                            <a href="#">A* Euclidean</a>
+                        </li>
+                        <li id="startButtonAStarManhattan" data-id="A* Manhattan" class="navbar-drop-item">
+                            <a href="#">A* Manhattan</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-id="dropdown" href="#">
+                        Mazes & Patterns
+                    </a>
+                    <ul class="dropdown-content" id="selectMaze">
+                        <li id="startButtonRecDiv" data-id="Recursive Division" class="navbar-drop-item">
+                            <a href="#">Recursive Division</a>
+                        </li>
+                        <li id="startButtonRandInit" data-id="Randomly Initialize" class="navbar-drop-item">
+                            <a href="#">Initialize randomly</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-id="dropdown" href="#">
+                        Clear
+                    </a>
+                    <ul class="dropdown-content">
+                        <li id="clearBoard" class="navbar-drop-item">
+                            <a href="#">Clear Board</a>
+                        </li>
+                        <li id="clearWalls" class="navbar-drop-item">
+                            <a href="#">Clear Walls</a>
+                        </li>
+                        <li id="clearWeights" class="navbar-drop-item">
+                            <a href="#">Clear Weights</a>
+                        </li>
+                        <li id="clearPath" class="navbar-drop-item">
+                            <a href="#">Clear Path</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li id="startBtnLI">
+                    <button id="startButton" class="button">Visualize!</button>
+                </li>
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-id="dropdown" href="#">
+                        Node: Wall
+                    </a>
+                    <ul class="dropdown-content" id="nodeType">
+                        <li id="wall" data-id="wall" class="navbar-drop-item">
+                            <a href="#">Wall</a>
+                        </li>
+                        <li id="sand" data-id="sand" class="navbar-drop-item">
+                            <a href="#">Sand (2)</a>
+                        </li>
+                        <li id="water" data-id="water" class="navbar-drop-item">
+                            <a href="#">Water (5)</a>
+                        </li>
+                        <li id="fire" data-id="fire" class="navbar-drop-item">
+                            <a href="#">Fire (10)</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-id="dropdown" href="#">
+                        Speed: Fast
+                    </a>
+                    <ul class="dropdown-content" id="speedDropdown">
+                        <li id="fast" data-id="fast" class="navbar-drop-item">
+                            <a href="#">Fast</a>
+                        </li>
+                        <li id="medium" data-id="medium" class="navbar-drop-item">
+                            <a href="#">Medium</a>
+                        </li>
+                        <li id="slow" data-id="slow" class="navbar-drop-item">
+                            <a href="#">Slow</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-        <ul class="navbar-nav">
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-id="dropdown" href="#">
-                    Algorithms
-                </a>
-                <ul class="dropdown-content" id="selectAlgo">
-                    <li id="startButtonDijkstra" data-id="Dijkstra" class="navbar-drop-item">
-                        <a href="#">Dijkstra</a>
-                    </li>
-                    <li id="startButtonDijkstraBidirectional" data-id="Bidirectional" class="navbar-drop-item">
-                        <a href="#">Bidirectional</a>
-                    </li>
-                    <li id="startButtonAStarEuclid" data-id="A* Euclidean" class="navbar-drop-item">
-                        <a href="#">A* Euclidean</a>
-                    </li>
-                    <li id="startButtonAStarManhattan" data-id="A* Manhattan" class="navbar-drop-item">
-                        <a href="#">A* Manhattan</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-id="dropdown" href="#">
-                    Mazes & Patterns
-                </a>
-                <ul class="dropdown-content" id="selectMaze">
-                    <li id="startButtonRecDiv" data-id="Recursive Division" class="navbar-drop-item">
-                        <a href="#">Recursive Division</a>
-                    </li>
-                    <li id="startButtonRandInit" data-id="Randomly Initialize" class="navbar-drop-item">
-                        <a href="#">Initialize randomly</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-id="dropdown" href="#">
-                    Clear
-                </a>
-                <ul class="dropdown-content">
-                    <li id="clearBoard" class="navbar-drop-item">
-                        <a href="#">Clear Board</a>
-                    </li>
-                    <li id="clearWalls" class="navbar-drop-item">
-                        <a href="#">Clear Walls</a>
-                    </li>
-                    <li id="clearWeights" class="navbar-drop-item">
-                        <a href="#">Clear Weights</a>
-                    </li>
-                    <li id="clearPath" class="navbar-drop-item">
-                        <a href="#">Clear Path</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li id="startBtnLI">
-                <button id="startButton" class="button">Visualize!</button>
-            </li>
-
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-id="dropdown" href="#">
-                    Node: Wall
-                </a>
-                <ul class="dropdown-content" id="nodeType">
-                    <li id="wall" data-id="wall" class="navbar-drop-item">
-                        <a href="#">Wall</a>
-                    </li>
-                    <li id="sand" data-id="sand" class="navbar-drop-item">
-                        <a href="#">Sand (2)</a>
-                    </li>
-                    <li id="water" data-id="water" class="navbar-drop-item">
-                        <a href="#">Water (5)</a>
-                    </li>
-                    <li id="fire" data-id="fire" class="navbar-drop-item">
-                        <a href="#">Fire (10)</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-id="dropdown" href="#">
-                    Speed: Fast
-                </a>
-                <ul class="dropdown-content" id="speedDropdown">
-                    <li id="fast" data-id="fast" class="navbar-drop-item">
-                        <a href="#">Fast</a>
-                    </li>
-                    <li id="medium" data-id="medium" class="navbar-drop-item">
-                        <a href="#">Medium</a>
-                    </li>
-                    <li id="slow" data-id="slow" class="navbar-drop-item">
-                        <a href="#">Slow</a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
     </nav>
 
     <div id="grid">

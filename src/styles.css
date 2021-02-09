@@ -11,10 +11,10 @@ nav {
     width: 100%;
     color: rgba(255,255,255, 0.85);
     background: darkblue;
-    padding-left: 21px;
-    padding-right: 21px;
     margin-bottom: 17px;
     text-transform: capitalize;
+    align-content: center;
+    white-space: nowrap;
 }
 
 ul {
@@ -26,7 +26,6 @@ ul {
 
 li {
     display: inline-block;
-    margin-right: 3em;
     font-size: 0.95em;
 }
 a {
@@ -35,9 +34,12 @@ a {
     font-size: 0.95em;
 }
 
+.navbar-nav-wrapper{
+    flex-grow: 1;
+}
+
 .dropdown {
     position: relative;
-    display: inline-block;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
 }
@@ -57,33 +59,35 @@ a {
 }
 
 .navbar-drop-item {
-    /*overflow float unnötig?*/
-    overflow: hidden;
     float: left;
     white-space: nowrap;
     text-align: left;
-    margin-right: 0;
     color: rgba(255,255,255, 0.8);
     padding: 12px 24px;
     text-decoration: none;
-    width: calc(100% - 24px);
+    /*width: calc(100% - 24px);*/
 }
 
-.navbar-nav {
-    margin: 0;
-    float: left;
+.navbar-nav{
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-between;
+    flex-direction: row;
+    padding-left: 21px;
+    padding-right: 21px;
 }
 
-.navbar-header {
-    font-size: 1.6em;
-    display: grid;
-    justify-content: center;
-    align-items: center;
+.container-title {
+    font-size: 1.2em;
+    padding-left: 21px;
+    padding-right: 21px;
 }
 
 .navbar-nav > li {
     padding: 15px 21px;
     line-height: 23px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .show-dropdown {
@@ -95,7 +99,9 @@ a {
 }
 
 #refreshButton{
+    padding-top: 10px;
     font-weight: bold;
+    font-size: 1.3em;
 }
 
 td{
@@ -306,5 +312,14 @@ td{
     }
     h5{
         font-size: 65%;
+    }
+    .navbar-nav{
+        display: flex;
+        flex-wrap: wrap;
+        align-content: space-between;
+        flex-direction: row;
+    }
+    nav{
+        flex-direction: column;
     }
 }
