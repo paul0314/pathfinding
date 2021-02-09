@@ -792,7 +792,7 @@ Algo.prototype = {
 
 let dijkstra = function(){
     this.calculateVisitedNodesInOrder = function(grid){
-        this.sucessfull = false;
+        this.successfull = false;
         let startNode = grid.getNode(grid.start);
         let finishNode = grid.getNode(grid.end);
         const visitedNodesInOrder = [];
@@ -813,16 +813,18 @@ let dijkstra = function(){
             updateUnvisitedNeighbors(closestNode, grid);
         }
     }
-    this.getNodesInPathOrder = function(lastNode){
-        const nodesInShortestPathOrder = [];
-        let currentNode = lastNode;
-        while (currentNode != null){
-            nodesInShortestPathOrder.unshift(currentNode);
-            currentNode = currentNode.previousNode;
-        }
-        return nodesInShortestPathOrder;
-    }
+    this.getNodesInPathOrder = getNodesInPathOrder;
     this.successfull = false;
+}
+
+function getNodesInPathOrder(lastNode){
+    const nodesInShortestPathOrder = [];
+    let currentNode = lastNode;
+    while (currentNode != null){
+        nodesInShortestPathOrder.unshift(currentNode);
+        currentNode = currentNode.previousNode;
+    }
+    return nodesInShortestPathOrder;
 }
 
 function sortNodesByDistance(nodes){
@@ -867,47 +869,11 @@ function updateUnvisitedNeighbors(node, grid){
 
 let aStarManhattan = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
-        return this.aStar(paramGrid);
+        let parThis = this;
+        return aStar(parThis, paramGrid, "manhattan");
     }
-    this.getNodesInPathOrder = function(lastNode){
-        const nodesInShortestPathOrder = [];
-        let currentNode = lastNode;
-        while (currentNode != null){
-            nodesInShortestPathOrder.unshift(currentNode);
-            currentNode = currentNode.previousNode;
-        }
-        return nodesInShortestPathOrder;
-    }
-    this.aStar = function (grid){
-        this.successfull = false;
-        let startNode = grid.getNode(grid.start);
-        let finishNode = grid.getNode(grid.end);
-        const openList = [];
-        const visitedNodesInOrder = [];
-        openList.push(grid.getNode(grid.start));
-        startNode.distance = 0;
-        while (!!openList.length) {
-            sortNodesAStar(openList, "manhattan", grid.end);
-            const currNode = openList.shift();
-            visitedNodesInOrder.push(currNode);
-            if (currNode.type === "wall") continue;
-            if (currNode.distance === Infinity) {
-                return visitedNodesInOrder;
-            }
-            currNode.visited = true;
-            if (currNode === finishNode) {
-                this.successfull = true;
-                return visitedNodesInOrder;
-            }
-            let toAdd = updateNeighborsAStar(currNode, grid);
-            for (const node of toAdd) {
-                if (!openList.includes(node)) {
-                    openList.push(node);
-                }
-            }
-        }
-        return visitedNodesInOrder;
-    }
+    this.getNodesInPathOrder = getNodesInPathOrder;
+
     this.successfull = false;
 }
 
@@ -922,49 +888,43 @@ function manhattanDistToEndNode(node, endId){
     return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
 }
 
+function aStar(parThis, grid, distanceMeasure){
+    parThis.successfull = false;
+    let startNode = grid.getNode(grid.start);
+    let finishNode = grid.getNode(grid.end);
+    const openList = [];
+    const visitedNodesInOrder = [];
+    openList.push(grid.getNode(grid.start));
+    startNode.distance = 0;
+    while (!!openList.length) {
+        sortNodesAStar(openList, distanceMeasure, grid.end);
+        const currNode = openList.shift();
+        visitedNodesInOrder.push(currNode);
+        if (currNode.type === "wall") continue;
+        if (currNode.distance === Infinity) {
+            return visitedNodesInOrder;
+        }
+        currNode.visited = true;
+        if (currNode === finishNode) {
+            parThis.successfull = true;
+            return visitedNodesInOrder;
+        }
+        let toAdd = updateNeighborsAStar(currNode, grid);
+        for (const node of toAdd) {
+            if (!openList.includes(node)) {
+                openList.push(node);
+            }
+        }
+    }
+    return visitedNodesInOrder;
+}
+
 let aStarEuclidean = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
-        return this.aStar(paramGrid);
+        let parThis = this;
+        return aStar(parThis, paramGrid, "euclidean");
     }
-    this.getNodesInPathOrder = function(lastNode){
-        const nodesInShortestPathOrder = [];
-        let currentNode = lastNode;
-        while (currentNode != null){
-            nodesInShortestPathOrder.unshift(currentNode);
-            currentNode = currentNode.previousNode;
-        }
-        return nodesInShortestPathOrder;
-    }
-    this.aStar = function (grid){
-        this.successfull = false;
-        let startNode = grid.getNode(grid.start);
-        let finishNode = grid.getNode(grid.end);
-        const openList = [];
-        const visitedNodesInOrder = [];
-        openList.push(grid.getNode(grid.start));
-        startNode.distance = 0;
-        while (!!openList.length) {
-            sortNodesAStar(openList, "euclidean", grid.end);
-            const currNode = openList.shift();
-            visitedNodesInOrder.push(currNode);
-            if (currNode.type === "wall") continue;
-            if (currNode.distance === Infinity) {
-                return visitedNodesInOrder;
-            }
-            currNode.visited = true;
-            if (currNode === finishNode) {
-                this.successfull = true;
-                return visitedNodesInOrder;
-            }
-            let toAdd = updateNeighborsAStar(currNode, grid);
-            for (const node of toAdd) {
-                if (!openList.includes(node)) {
-                    openList.push(node);
-                }
-            }
-        }
-        return visitedNodesInOrder;
-    }
+    this.getNodesInPathOrder = getNodesInPathOrder;
     this.successfull = false;
 }
 
@@ -1021,8 +981,8 @@ let bidirectional = function(){
         finishNode.backwardDistance = 0;
         finishNode.backwardVisited = true;
         while(!!unvisitedNodesForward.length && !!unvisitedNodesBackward.length){
-            sortNodesByForwardDistance(unvisitedNodesForward);
-            sortNodesByBackwardDistance(unvisitedNodesBackward);
+            this.sortNodesByForwardDistance(unvisitedNodesForward);
+            this.sortNodesByBackwardDistance(unvisitedNodesBackward);
             const closestNodeForward = unvisitedNodesForward.shift();
             const closestNodeBackward = unvisitedNodesBackward.shift();
             if(closestNodeForward.forwardDistance === Infinity || closestNodeBackward.backwardDistance === Infinity){
@@ -1040,8 +1000,8 @@ let bidirectional = function(){
                 this.lastNode = closestNodeBackward;
                 return visitedNodesInOrder;
             }
-            updateUnvisitedNeighborsForward(closestNodeForward, grid);
-            updateUnvisitedNeighborsBackward(closestNodeBackward, grid);
+            this.updateUnvisitedNeighborsForward(closestNodeForward, grid);
+            this.updateUnvisitedNeighborsBackward(closestNodeBackward, grid);
         }
     }
     this.successfull = false;
@@ -1084,40 +1044,35 @@ let bidirectional = function(){
             }
         }
     }
-}
-
-function sortNodesByForwardDistance(nodes){
-    nodes.sort((nodeA, nodeB) => nodeA.forwardDistance - nodeB.forwardDistance);
-}
-function sortNodesByBackwardDistance(nodes){
-    nodes.sort((nodeA, nodeB) => nodeA.backwardDistance - nodeB.backwardDistance);
-}
-
-function getUnvisitedNeighborsForward(node, grid){
-    let neighbors = getNeighbors(node, grid);
-    return neighbors.filter(neighbor => !neighbor.forwardVisited);
-}
-
-function getUnvisitedNeighborsBackward(node, grid){
-    let neighbors = getNeighbors(node, grid);
-    return neighbors.filter(neighbor => !neighbor.backwardVisited);
-}
-
-function updateUnvisitedNeighborsBackward(node, grid){
-    const unvisitedNeighbors = getUnvisitedNeighborsBackward(node, grid);
-    for(const neighbor of unvisitedNeighbors){
-        neighbor.backwardDistance = node.backwardDistance + neighbor.weight + 1;
-        neighbor.previousBackwardNode = node;
-        neighbor.backwardVisited = true;
+    this.sortNodesByForwardDistance = function(nodes){
+        nodes.sort((nodeA, nodeB) => nodeA.forwardDistance - nodeB.forwardDistance);
     }
-}
-
-function updateUnvisitedNeighborsForward(node, grid){
-    const unvisitedNeighbors = getUnvisitedNeighborsForward(node, grid);
-    for(const neighbor of unvisitedNeighbors){
-        neighbor.forwardDistance = node.forwardDistance + neighbor.weight + 1;
-        neighbor.previousForwardNode = node;
-        neighbor.forwardVisited = true;
+    this.sortNodesByBackwardDistance = function(nodes){
+        nodes.sort((nodeA, nodeB) => nodeA.backwardDistance - nodeB.backwardDistance);
+    }
+    this.getUnvisitedNeighborsForward = function(node, grid){
+        let neighbors = getNeighbors(node, grid);
+        return neighbors.filter(neighbor => !neighbor.forwardVisited);
+    }
+    this.getUnvisitedNeighborsBackward = function(node, grid){
+        let neighbors = getNeighbors(node, grid);
+        return neighbors.filter(neighbor => !neighbor.backwardVisited);
+    }
+    this.updateUnvisitedNeighborsBackward = function(node, grid){
+        const unvisitedNeighbors = this.getUnvisitedNeighborsBackward(node, grid);
+        for(const neighbor of unvisitedNeighbors){
+            neighbor.backwardDistance = node.backwardDistance + neighbor.weight + 1;
+            neighbor.previousBackwardNode = node;
+            neighbor.backwardVisited = true;
+        }
+    }
+    this.updateUnvisitedNeighborsForward = function(node, grid){
+        const unvisitedNeighbors = this.getUnvisitedNeighborsForward(node, grid);
+        for(const neighbor of unvisitedNeighbors){
+            neighbor.forwardDistance = node.forwardDistance + neighbor.weight + 1;
+            neighbor.previousForwardNode = node;
+            neighbor.forwardVisited = true;
+        }
     }
 }
 
