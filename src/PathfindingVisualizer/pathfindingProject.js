@@ -776,7 +776,13 @@ Algo.prototype = {
         let grid = deepCopyGrid(paramGrid);
         setupNodes(grid);
         let visitedNodesInOrder = this.calculateVisitedNodesInOrder(grid);
-        let pathInOrder = this.getNodesInPathOrder(visitedNodesInOrder[visitedNodesInOrder.length - 1]);
+        let pathInOrder;
+        if(this.algo.successfull){
+            pathInOrder = this.getNodesInPathOrder(visitedNodesInOrder[visitedNodesInOrder.length - 1]);
+        }
+        else{
+            pathInOrder = [];
+        }
         return [visitedNodesInOrder, pathInOrder];
     },
     getNodesInPathOrder: function(lastNode){
@@ -800,6 +806,7 @@ let dijkstra = function(){
             }
             visitedNodesInOrder.push(closestNode);
             if(closestNode === finishNode){
+                this.successfull = true;
                 return visitedNodesInOrder;
             }
             updateUnvisitedNeighbors(closestNode, grid);
@@ -814,6 +821,7 @@ let dijkstra = function(){
         }
         return nodesInShortestPathOrder;
     }
+    this.successfull = false;
 }
 
 function sortNodesByDistance(nodes){
@@ -872,6 +880,7 @@ function aStar(grid, distanceMeasure){
         }
         currNode.visited = true;
         if (currNode === finishNode) {
+            this.successfull = true;
             return visitedNodesInOrder;
         }
         let toAdd = updateNeighborsAStar(currNode, grid);
@@ -898,6 +907,7 @@ let aStarManhattan = function(){
         }
         return nodesInShortestPathOrder;
     }
+    this.successfull = false;
 }
 
 function manhattanDistToEndNode(node, endId){
@@ -924,6 +934,7 @@ let aStarEuclidean = function(){
         }
         return nodesInShortestPathOrder;
     }
+    this.successfull = false;
 }
 
 function euclDistToEndNode(node, endId){
@@ -988,13 +999,14 @@ let bidirectional = function(){
             visitedNodesInOrder.push(closestNodeForward);
             visitedNodesInOrder.push(closestNodeBackward);
             if(!!closestNodeForward.backwardVisited || !!closestNodeBackward.forwardVisited){
+                this.successfull = true;
                 return visitedNodesInOrder;
             }
             updateUnvisitedNeighborsForward(closestNodeForward, grid);
             updateUnvisitedNeighborsBackward(closestNodeBackward, grid);
         }
     }
-
+    this.successfull = false;
     this.getNodesInPathOrder = function(lastNode){
         const nodesInShortestPathOrder = [];
         let currentNode = lastNode;
