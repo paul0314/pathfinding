@@ -34,7 +34,6 @@ class Grid{
         }
         parGrid.changeNodeType(startId, "start");
         parGrid.start = `${startId}`;
-
     }
 
     setEnd(endId){
@@ -150,6 +149,10 @@ class Controller{
         this.Algo = new Algo();
         this.algoStrategy = null;
 
+        this.setup();
+    }
+    setup = () => {
+        //order important
         this.initModelBinds();
         this.setUpBoard();
         this.initViewBinds();
@@ -161,6 +164,11 @@ class Controller{
         this.onReload(this.model.grid);
         this.model.setNodeType(startEndIds[0], "start");
         this.model.setNodeType(startEndIds[1], "end");
+    }
+    onReload = grid => {
+        this.view.displayGrid(grid);
+        this.view.setupTutorial();
+        this.view.setupDropdowns();
     }
     initModelBinds(){
         this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
@@ -177,21 +185,16 @@ class Controller{
         this.view.bindVisualize(this.handleVisualize);
         this.view.bindVisualizeMaze(this.handleMazeSelected);
         this.view.bindRefresh(this.handleRefresh);
+        this.view.bindMouseEnter(this.handleMouseEnter);
+        this.view.bindMouseUp(this.handleMouseUp);
+        this.view.bindMouseDown(this.handleMouseDown);
+        this.view.bindMouseLeave(this.handleMouseLeave);
     }
     onNodeTypeChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeType(nodeId, oldType, newType);
     }
     onNodeStatusChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeStatus(nodeId, oldType, newType);
-    }
-    onReload = grid => {
-        this.view.displayGrid(grid);
-        this.view.setupTutorial();
-        this.view.setupDropdowns();
-        this.view.bindMouseEnter(this.handleMouseEnter);
-        this.view.bindMouseUp(this.handleMouseUp);
-        this.view.bindMouseDown(this.handleMouseDown);
-        this.view.bindMouseLeave(this.handleMouseLeave);
     }
     handleRefresh(){
         location.reload();
@@ -282,21 +285,23 @@ class Controller{
     handleAlgoSelected = (eventEle) =>{
         if(this.algoDone){
             let eventId = eventEle.dataset.id;
-            if(eventId === "Dijkstra"){
-                this.algoStrategy = new dijkstra();
-                this.Algo.setStrategy(this.algoStrategy);
-            }
-            if(eventId === "A* Euclidean"){
-                this.algoStrategy = new aStarEuclidean();
-                this.Algo.setStrategy(this.algoStrategy);
-            }
-            if(eventId === "A* Manhattan"){
-                this.algoStrategy = new aStarManhattan();
-                this.Algo.setStrategy(this.algoStrategy);
-            }
-            if(eventId === "Bidirectional"){
-                this.algoStrategy = new bidirectional();
-                this.Algo.setStrategy(this.algoStrategy);
+            switch(eventId){
+                case "Dijkstra":
+                    this.algoStrategy = new dijkstra();
+                    this.Algo.setStrategy(this.algoStrategy);
+                    break;
+                case "A* Euclidean":
+                    this.algoStrategy = new aStarEuclidean();
+                    this.Algo.setStrategy(this.algoStrategy);
+                    break;
+                case "A* Manhattan":
+                    this.algoStrategy = new aStarManhattan();
+                    this.Algo.setStrategy(this.algoStrategy);
+                    break;
+                case "Bidirectional":
+                    this.algoStrategy = new bidirectional();
+                    this.Algo.setStrategy(this.algoStrategy);
+                    break;
             }
             let startBtn = this.view.getElement("startButton");
             startBtn.innerHTML = `Visualize ${eventId}!`;
@@ -720,7 +725,7 @@ class View{
 
 
 
-//Beim Laden der Seite erstelle Model, Controller und implizit View
+//Create Model, View and Controller after loading HTML
 document.addEventListener("DOMContentLoaded", function () {
     let model = new Model();
     let controller = new Controller(model);
@@ -728,8 +733,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-//helper functions
-
+//helper functions for algorithms
 function setupNodes(grid){
     let weights = {sand: 2, water: 5, fire: 10, start: 0, end: 0, wall: Infinity, none: 0};
     for(let row = 0; row < grid.height; row++){
@@ -774,7 +778,6 @@ function getAllNodes(grid){
 
 
 //all algorithms
-
 let Algo = function(){
     this.algo = null;
 };
@@ -891,17 +894,6 @@ let aStarManhattan = function(){
     this.successfull = false;
 }
 
-function manhattanDistToEndNode(node, endId){
-    let splitEndId = endId.split("-");
-    let yEnd = parseInt(splitEndId[0]);
-    let xEnd = parseInt(splitEndId[1]);
-    let splitNodeId = node.id.split("-");
-    let yNode = parseInt(splitNodeId[0]);
-    let xNode= parseInt(splitNodeId[1]);
-
-    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
-}
-
 function aStar(parThis, grid, distanceMeasure){
     parThis.successfull = false;
     let startNode = grid.getNode(grid.start);
@@ -933,6 +925,26 @@ function aStar(parThis, grid, distanceMeasure){
     return visitedNodesInOrder;
 }
 
+function sortNodesAStar(nodes, distanceMeasure, endId){
+    if(distanceMeasure === "euclidean"){
+        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA, endId) - nodeB.distance - euclDistToEndNode(nodeB, endId));
+    }
+    else{
+        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA, endId) - nodeB.distance - manhattanDistToEndNode(nodeB, endId));
+    }
+}
+
+function manhattanDistToEndNode(node, endId){
+    let splitEndId = endId.split("-");
+    let yEnd = parseInt(splitEndId[0]);
+    let xEnd = parseInt(splitEndId[1]);
+    let splitNodeId = node.id.split("-");
+    let yNode = parseInt(splitNodeId[0]);
+    let xNode= parseInt(splitNodeId[1]);
+
+    return 1.001*Math.abs(xEnd - xNode) + Math.abs(yEnd - yNode);
+}
+
 let aStarEuclidean = function(){
     this.calculateVisitedNodesInOrder = function (paramGrid) {
         let parThis = this;
@@ -951,15 +963,6 @@ function euclDistToEndNode(node, endId){
     let xNode= parseInt(splitNodeId[1]);
 
     return 1.001*(Math.sqrt(Math.pow(xEnd - xNode, 2) + Math.pow(yEnd - yNode, 2)));
-}
-
-function sortNodesAStar(nodes, distanceMeasure, endId){
-    if(distanceMeasure === "euclidean"){
-        nodes.sort((nodeA, nodeB) => nodeA.distance + euclDistToEndNode(nodeA, endId) - nodeB.distance - euclDistToEndNode(nodeB, endId));
-    }
-    else{
-        nodes.sort((nodeA, nodeB) => nodeA.distance + manhattanDistToEndNode(nodeA, endId) - nodeB.distance - manhattanDistToEndNode(nodeB, endId));
-    }
 }
 
 function updateNeighborsAStar(node, grid) {
@@ -1091,8 +1094,8 @@ let bidirectional = function(){
 }
 
 
-//MazeAlgorithmen ab hier
 
+//MazeAlgorithmen ab hier
 let Maze = function(){
     this.mazeAlgo = null;
 };
@@ -1215,7 +1218,6 @@ let recursiveDivision = function(){
             for(let i = 1; i < height - 1; i++){
                 let x = parseInt(offsetX);
                 let y = parseInt(offsetY) + i;
-                //left side check
                 if(this.outOfBounce(x - 1, y) || this.isWall(x - 1, y)){
                     if(this.outOfBounce(x + width, y) || this.isWall(x + width, y)){
                         for(let j = offsetX; j < offsetX + width; j++){
@@ -1237,7 +1239,6 @@ let recursiveDivision = function(){
             for(let i = 1; i < width - 1; i++){
                 let x = parseInt(offsetX) + i;
                 let y = parseInt(offsetY);
-                //left side check
                 if(this.outOfBounce(x, y - 1) || this.isWall(x, y - 1)){
                     if(this.outOfBounce(x, y + height) || this.isWall(x, y + height)){
                         for(let j = offsetY; j < offsetY + height; j++){
@@ -1263,6 +1264,5 @@ let recursiveDivision = function(){
     }
     this.isWall = function(x,y){
         return this.grid.getNode(`${parseInt(y)}-${parseInt(x)}`).type === "wall";
-
     }
 }
