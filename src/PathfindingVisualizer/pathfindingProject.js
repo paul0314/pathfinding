@@ -133,9 +133,8 @@ class Model{
 
 class Controller{
     constructor(model){
-        let parController = this;
         this.model = model;
-        this.view = new View(parController, model);
+        this.view = new View(this, model);
 
         this.weightNodes = ["sand", "water", "fire"];
         this.speeds = {slow: 5, medium: 2, fast: 0.5};
@@ -151,14 +150,17 @@ class Controller{
         this.Algo = new Algo();
         this.algoStrategy = null;
 
+        this.initModelBinds();
+        this.setUpBoard();
+        this.initViewBinds();
+    }
+    setUpBoard(){
         let boardSize = this.view.calculateWidthAndHeight();
         let startEndIds = this.calculateInitialStartEnd(boardSize[0], boardSize[1]);
         this.model.initialize(boardSize[0], boardSize[1]);
         this.onReload(this.model.grid);
-        this.initModelBinds();
         this.model.setNodeType(startEndIds[0], "start");
         this.model.setNodeType(startEndIds[1], "end");
-        this.initViewBinds();
     }
     initModelBinds(){
         this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
@@ -174,6 +176,7 @@ class Controller{
         this.view.bindSetAlgo(this.handleAlgoSelected);
         this.view.bindVisualize(this.handleVisualize);
         this.view.bindVisualizeMaze(this.handleMazeSelected);
+        this.view.bindRefresh(this.handleRefresh);
     }
     onNodeTypeChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeType(nodeId, oldType, newType);
@@ -189,6 +192,9 @@ class Controller{
         this.view.bindMouseUp(this.handleMouseUp);
         this.view.bindMouseDown(this.handleMouseDown);
         this.view.bindMouseLeave(this.handleMouseLeave);
+    }
+    handleRefresh(){
+        location.reload();
     }
     handleVisualize = () =>{
         if(this.algoDone){
@@ -264,13 +270,13 @@ class Controller{
     handleSpeedSelected = (eventEle) =>{
         if(this.algoDone){
             this.currSpeed = `${eventEle.dataset.id}`;
-            eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id}`;
+            eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id} <span class="carel">▼</span>`;
         }
     }
     handleNodeTypeSelected = (eventEle) =>{
         if(this.algoDone){
             this.selectedNodeType = `${eventEle.dataset.id}`;
-            eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id}`;
+            eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id} <span class="carel">▼</span>`;
         }
     }
     handleAlgoSelected = (eventEle) =>{
@@ -478,6 +484,7 @@ class View{
         this.nodeType = this.getElement("nodeType");
         this.speedDropdown = this.getElement("speedDropdown");
         this.selectAlgo = this.getElement("selectAlgo");
+        this.refreshBtn = this.getElement("refreshButton");
         this.height = 0;
         this.width = 0;
         this.currExplTab = 0;
@@ -533,6 +540,11 @@ class View{
     }
     bindVisualize(handler){
         this.startBtn.addEventListener("click", () => {
+            handler();
+        });
+    }
+    bindRefresh(handler){
+        this.refreshBtn.addEventListener("click", () => {
             handler();
         });
     }
@@ -682,6 +694,7 @@ class View{
                     }
                 });
                 content.classList.toggle("show-dropdown");
+                e.currentTarget.classList.toggle("dropped-down");
                 if(content.parentElement.style.backgroundColor === "limegreen"){
                     content.parentElement.style.backgroundColor = "darkblue";
                 }
@@ -696,6 +709,7 @@ class View{
                 const parent = item.parentElement;
                 const content = parent.querySelector(".dropdown-content");
                 if(clicked.target !== item){
+                    item.classList.remove("dropped-down");
                     content.classList.remove("show-dropdown");
                     content.parentElement.style.backgroundColor = "darkblue";
                 }

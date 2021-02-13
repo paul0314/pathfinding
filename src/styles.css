@@ -34,8 +34,21 @@ a {
     font-size: 0.95em;
 }
 
+.carel{
+    color: forestgreen;
+}
+
+a:hover:not(.dropped-down){
+    color: limegreen;
+}
+a:hover:not(.dropped-down) .carel{ color:limegreen}
+
 .navbar-nav-wrapper{
     flex-grow: 1;
+}
+
+#startButton:hover {
+    background-color: limegreen;
 }
 
 .dropdown {
@@ -127,7 +140,7 @@ td{
 }
 
 .button {
-    background-color: limegreen;
+    background-color: forestgreen;
     border: none;
     color: white;
     padding: 14px 24px;
