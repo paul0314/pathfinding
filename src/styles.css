@@ -38,16 +38,16 @@ a {
     color: forestgreen;
 }
 
-a:hover:not(.dropped-down){
+body.has-hover a:hover:not(.dropped-down){
     color: limegreen;
 }
-a:hover:not(.dropped-down) .carel{ color:limegreen}
+body.has-hover a:hover:not(.dropped-down) .carel{ color:limegreen}
 
 .navbar-nav-wrapper{
     flex-grow: 1;
 }
 
-#startButton:hover {
+body.has-hover #startButton:hover {
     background-color: limegreen;
 }
 

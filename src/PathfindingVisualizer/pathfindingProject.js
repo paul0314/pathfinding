@@ -15,6 +15,7 @@ class Grid{
         this.start = null;
         this.end = null;
     }
+
     initializeEmptyBoard(){
         for(let row = 0; row < this.height; row++){
             for(let col = 0; col < this.width; col++){
@@ -23,6 +24,7 @@ class Grid{
             }
         }
     }
+
     setStart(startId){
         let parGrid = this;
         let splitId = startId.split("-");
@@ -56,6 +58,7 @@ class Grid{
             currNode.type = newType;
         }
     }
+
     changeNodeStatus(currNodeId, newStatus){
         let parGrid = this;
         let currNode = parGrid.getNode(currNodeId);
@@ -63,12 +66,15 @@ class Grid{
             currNode.status = newStatus;
         }
     }
+
     getNode(nodeId){
         return this.nodes[`${nodeId}`];
     }
+
     getStatus(nodeId){
         return this.nodes[`${nodeId}`].status;
     }
+
     getType(nodeId){
         return this.nodes[`${nodeId}`].type;
     }
@@ -78,12 +84,11 @@ class Model{
     constructor() {
         this.grid = null;
     }
-    commitNodeStatusChange(nodeId, oldStatus, newStatus){
-        this.onNodeStatusChange(nodeId, oldStatus, newStatus);
+
+    initialize(height, width){
+        this.grid = new Grid(height, width);
     }
-    commitNodeTypeChange(nodeId, oldType, newType){
-        this.onNodeTypeChange(nodeId, oldType, newType);
-    }
+
     setNodeStatus(nodeId, newNodeStatus){
         let oldStatus = this.grid.getStatus(nodeId);
         if(oldStatus !== newNodeStatus){
@@ -91,6 +96,11 @@ class Model{
             this.commitNodeStatusChange(nodeId, oldStatus, newNodeStatus);
         }
     }
+
+    commitNodeStatusChange(nodeId, oldStatus, newStatus){
+        this.onNodeStatusChange(nodeId, oldStatus, newStatus);
+    }
+
     setNodeType(nodeId, newNodeType){
         let oldStatus = this.grid.getType(nodeId);
         if(oldStatus !== newNodeType){
@@ -104,29 +114,35 @@ class Model{
             this.commitNodeTypeChange(nodeId, oldStatus, newNodeType);
         }
     }
-    getNode(nodeId){
-        return this.grid.nodes[nodeId];
+
+    commitNodeTypeChange(nodeId, oldType, newType){
+        this.onNodeTypeChange(nodeId, oldType, newType);
     }
+
     setStart(newStartId){
         let oldStartType = this.grid.getType(newStartId);
         this.grid.changeNodeType(newStartId, "start");
         this.grid.start = `${newStartId}`;
         this.commitNodeTypeChange(newStartId, oldStartType, "start");
     }
+
     setEnd(newEndId){
         let oldEndType = this.grid.getType(newEndId);
         this.grid.changeNodeType(newEndId, "end");
         this.grid.end = `${newEndId}`;
         this.commitNodeTypeChange(newEndId, oldEndType, "end");
     }
+
     bindNodeStatusChanged(callback){
         this.onNodeStatusChange = callback;
     }
+
     bindNodeTypeChanged(callback){
         this.onNodeTypeChange = callback;
     }
-    initialize(height, width){
-        this.grid = new Grid(height, width);
+
+    getNode(nodeId){
+        return this.grid.nodes[nodeId];
     }
 }
 
@@ -151,12 +167,14 @@ class Controller{
 
         this.setup();
     }
+
     setup = () => {
         //order important
         this.initModelBinds();
         this.setUpBoard();
         this.initViewBinds();
     }
+
     setUpBoard(){
         let boardSize = this.view.calculateWidthAndHeight();
         let startEndIds = this.calculateInitialStartEnd(boardSize[0], boardSize[1]);
@@ -165,15 +183,18 @@ class Controller{
         this.model.setNodeType(startEndIds[0], "start");
         this.model.setNodeType(startEndIds[1], "end");
     }
+
     onReload = grid => {
         this.view.displayGrid(grid);
         this.view.setupTutorial();
         this.view.setupDropdowns();
     }
+
     initModelBinds(){
         this.model.bindNodeTypeChanged(this.onNodeTypeChanged);
         this.model.bindNodeStatusChanged(this.onNodeStatusChanged);
     }
+
     initViewBinds(){
         this.view.bindClearBoard(this.handleClearBoard);
         this.view.bindClearWalls(this.handleClearWalls);
@@ -190,15 +211,19 @@ class Controller{
         this.view.bindMouseDown(this.handleMouseDown);
         this.view.bindMouseLeave(this.handleMouseLeave);
     }
+
     onNodeTypeChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeType(nodeId, oldType, newType);
     }
+
     onNodeStatusChanged = (nodeId, oldType, newType) => {
         this.view.displayChangedNodeStatus(nodeId, oldType, newType);
     }
+
     handleRefresh(){
         location.reload();
     }
+
     handleVisualize = () =>{
         if(this.algoDone){
             this.algoDone = false;
@@ -217,9 +242,11 @@ class Controller{
             }
         }
     }
+
     handleClearWalls = () =>{
         this.clearWalls();
     }
+
     clearWalls(){
         for(let row = 0; row < this.model.grid.height; row++){
             for(let col = 0; col < this.model.grid.width; col++){
@@ -231,11 +258,13 @@ class Controller{
             }
         }
     }
+
     handleClearWeights = () =>{
         if(this.algoDone){
             this.clearWeights();
         }
     }
+
     clearWeights(){
         for(let row = 0; row < this.model.grid.height; row++){
             for(let col = 0; col < this.model.grid.width; col++){
@@ -247,11 +276,13 @@ class Controller{
             }
         }
     }
+
     handleClearPath = () =>{
         if(this.algoDone){
             this.clearPath();
         }
     }
+
     clearPath(){
         for(let row = 0; row < this.model.grid.height; row++){
             for(let col = 0; col < this.model.grid.width; col++){
@@ -260,28 +291,33 @@ class Controller{
             }
         }
     }
+
     handleClearBoard = () =>{
         if(this.algoDone){
             this.clearBoard();
         }
     }
+
     clearBoard(){
         this.clearWalls();
         this.clearWeights();
         this.clearPath();
     }
+
     handleSpeedSelected = (eventEle) =>{
         if(this.algoDone){
             this.currSpeed = `${eventEle.dataset.id}`;
             eventEle.parentElement.parentElement.children[0].innerHTML = `Speed: ${eventEle.dataset.id} <span class="carel">▼</span>`;
         }
     }
+
     handleNodeTypeSelected = (eventEle) =>{
         if(this.algoDone){
             this.selectedNodeType = `${eventEle.dataset.id}`;
             eventEle.parentElement.parentElement.children[0].innerHTML = `Node: ${eventEle.dataset.id} <span class="carel">▼</span>`;
         }
     }
+
     handleAlgoSelected = (eventEle) =>{
         if(this.algoDone){
             let eventId = eventEle.dataset.id;
@@ -307,6 +343,7 @@ class Controller{
             startBtn.innerHTML = `Visualize ${eventId}!`;
         }
     }
+
     handleMazeSelected = (eventEle) => {
         if(this.algoDone){
             this.algoDone = false;
@@ -328,6 +365,7 @@ class Controller{
             }
         }
     }
+
     randomlyInitialize(){
         this.clearBoard();
         for(let row = 0; row < this.model.grid.height; row++){
@@ -343,6 +381,7 @@ class Controller{
             }
         }
     }
+
     animateMaze(wallNodes){
         let startBtn = this.view.getElement("startButton");
         startBtn.style.backgroundColor = "red";
@@ -360,6 +399,7 @@ class Controller{
             }, 20 * i * this.speeds[`${this.currSpeed}`]);
         }
     }
+
     handleMouseDown = (nodeId) => {
         if(this.algoDone){
             this.mouseDown = true;
@@ -372,6 +412,7 @@ class Controller{
             }
         }
     }
+
     handleMouseUp = (nodeId) => {
         if(this.algoDone){
             let currNode = this.model.getNode(nodeId);
@@ -390,6 +431,7 @@ class Controller{
             this.prevNodeType = "none";
         }
     }
+
     handleMouseEnter = (nodeId) => {
         if(this.algoDone && this.mouseDown){
             let currNode = this.model.getNode(nodeId);
@@ -402,6 +444,7 @@ class Controller{
             }
         }
     }
+
     handleMouseLeave = (nodeId) => {
         if(this.algoDone && this.mouseDown){
             let currNode = this.model.getNode(nodeId);
@@ -411,6 +454,7 @@ class Controller{
             this.prevNode = currNode;
         }
     }
+
     changeNormalNode(node){
         if(node.type === "start" || node.type === "end"){
             return;
@@ -422,6 +466,7 @@ class Controller{
             this.model.setNodeType(node.id, "none");
         }
     }
+
     changeSpecialNode(node){
         if(this.prevNode){
             if(node.type !== "start" && node.type !== "end"){
@@ -435,11 +480,13 @@ class Controller{
             }
         }
     }
+
     calculateInitialStartEnd(height, width){
         let startId = `${Math.floor(height / 4)}-${Math.floor(width / 4)}`;
         let endId = `${Math.floor(height * 3 / 4)}-${Math.floor(width * 3 / 4)}`;
         return [startId, endId];
     }
+
     animateAlgo(visitedNodes, pathNodes){
         let startBtn = this.view.getElement("startButton");
         startBtn.style.backgroundColor = "red";
@@ -455,6 +502,7 @@ class Controller{
             }, 10 * this.speeds[`${this.currSpeed}`] * visitedNodes.length);
         }
     }
+
     animateVisitedNodes(visitedNodes){
         for(let i = 0; i < visitedNodes.length; i++){
             setTimeout(() => {
@@ -463,6 +511,7 @@ class Controller{
             }, 10 * i * this.speeds[`${this.currSpeed}`]);
         }
     }
+
     animatePathNodes(pathNodes){
         for(let i = 0; i < pathNodes.length; i++){
             setTimeout(() => {
@@ -471,6 +520,7 @@ class Controller{
             }, 50 * this.speeds[`${this.currSpeed}`] * i);
         }
     }
+
     calculateAlgoDuration(visitedNodes, pathNodes){
         let duration = 0;
         duration += visitedNodes.length * this.speeds[`${this.currSpeed}`] * 10;
@@ -493,6 +543,7 @@ class View{
         this.height = 0;
         this.width = 0;
         this.currExplTab = 0;
+        this.watchForHover();
     }
 
     bindClearBoard(handler){
@@ -501,21 +552,25 @@ class View{
             handler(eventEle);
         });
     }
+
     bindClearWalls(handler){
         this.clearWalls.addEventListener("click", () => {
             handler();
         });
     }
+
     bindClearPath(handler){
         this.clearPath.addEventListener("click", () => {
             handler();
         });
     }
+
     bindClearWeights(handler){
         this.clearWeights.addEventListener("click", () => {
             handler();
         });
     }
+
     bindSetSpeed(handler){
         this.speedDropdown.addEventListener("click", event => {
             let eventEle = event.target;
@@ -525,6 +580,7 @@ class View{
             handler(eventEle);
         });
     }
+
     bindSelectedNodeType(handler){
         this.nodeType.addEventListener("click", event => {
             let eventEle = event.target;
@@ -534,6 +590,7 @@ class View{
             handler(eventEle);
         });
     }
+
     bindSetAlgo(handler){
         this.selectAlgo.addEventListener("click", event => {
             let eventEle = event.target;
@@ -543,16 +600,19 @@ class View{
             handler(eventEle);
         });
     }
+
     bindVisualize(handler){
         this.startBtn.addEventListener("click", () => {
             handler();
         });
     }
+
     bindRefresh(handler){
         this.refreshBtn.addEventListener("click", () => {
             handler();
         });
     }
+
     bindVisualizeMaze(handler){
         let mazeList = this.getElement("selectMaze");
         mazeList.addEventListener("click", event => {
@@ -563,6 +623,7 @@ class View{
             handler(eventEle);
         })
     }
+
     bindMouseDown(handler){
         for(let row = 0; row < this.height; row++){
             for(let col = 0; col < this.width; col++){
@@ -575,15 +636,19 @@ class View{
             }
         }
     }
+
     bindMouseUp(handler){
         this.bindMouseEvent(handler, "mouseup");
     }
+
     bindMouseEnter(handler){
         this.bindMouseEvent(handler, "mouseenter");
     }
+
     bindMouseLeave(handler){
         this.bindMouseEvent(handler, "mouseleave");
     }
+
     bindMouseEvent(handler, type){
         for(let row = 0; row < this.height; row++){
             for(let col = 0; col < this.width; col++){
@@ -595,6 +660,7 @@ class View{
             }
         }
     }
+
     calculateWidthAndHeight(){
         let nav = this.getElement("nav");
         const navHeight = nav.getBoundingClientRect().height;
@@ -602,6 +668,7 @@ class View{
         const width = Math.max(10, Math.floor(window.innerWidth / 26.5));
         return [height, width];
     }
+
     displayGrid(grid){
         let tableGrid = this.getElement("table-grid");
         this.height = grid.height;
@@ -618,22 +685,27 @@ class View{
         }
         tableGrid.innerHTML = tableHTML;
     }
+
     displayChangedNodeStatus(nodeId, oldStatus, newStatus){
         let currHTMLElement = this.getElement(nodeId);
         currHTMLElement.classList.add(newStatus);
         currHTMLElement.classList.remove(oldStatus);
     }
+
     displayChangedNodeType(nodeId, oldType, newType){
         let currHTMLElement = this.getElement(nodeId);
         currHTMLElement.classList.remove(oldType);
         currHTMLElement.classList.add(newType);
     }
+
     getElement(selector){
         return document.getElementById(selector);
     }
+
     getAllElements(selector){
         return document.querySelectorAll(selector);
     }
+
     setupTutorial(){
         let tutorialContent =
             [`<h1>Pathfinding Visualizer Tutorial</h1><h3>Use this short tutorial in order to get used to this website!</h3><h4>If you're ready click on <b>"Start Tutorial"!</b></h4>`,
@@ -685,6 +757,7 @@ class View{
         nextExplBtn.innerHTML = "Start tutorial";
         prevExplBtn.innerHTML = "previous";
     }
+
     setupDropdowns(){
         const dropdownBtns = this.getAllElements(".dropdown-toggle");
         const dropdownContent = this.getAllElements(".dropdown-content");
@@ -720,6 +793,27 @@ class View{
                 }
             });
         });
+    }
+
+    //deactivate hover on touch events (i.e. mobile devices)
+    watchForHover(){
+        let lastTouchTime = 0;
+        function enableHover(){
+            if(new Date() - lastTouchTime < 500){
+                return;
+            }
+            document.body.classList.add("has-hover");
+        }
+        function disableHover(){
+            document.body.classList.remove("has-hover");
+        }
+        function updateLastTouchTime(){
+            lastTouchTime = new Date();
+        }
+        document.addEventListener("touchstart", updateLastTouchTime, true);
+        document.addEventListener("touchstart", disableHover, true);
+        document.addEventListener("mousemove", enableHover, true);
+        enableHover();
     }
 }
 
@@ -786,9 +880,11 @@ Algo.prototype = {
     setStrategy: function(algo){
         this.algo = algo;
     },
+
     calculateVisitedNodesInOrder: function(grid){
         return this.algo.calculateVisitedNodesInOrder(grid);
     },
+
     calculateVisitedNodesAndPathInOrder(paramGrid){
         let grid = deepCopyGrid(paramGrid);
         setupNodes(grid);
@@ -802,6 +898,7 @@ Algo.prototype = {
         }
         return [visitedNodesInOrder, pathInOrder];
     },
+
     getNodesInPathOrder: function(lastNode){
         return this.algo.getNodesInPathOrder(lastNode);
     }
@@ -890,7 +987,6 @@ let aStarManhattan = function(){
         return aStar(parThis, paramGrid, "manhattan");
     }
     this.getNodesInPathOrder = getNodesInPathOrder;
-
     this.successfull = false;
 }
 
@@ -950,6 +1046,7 @@ let aStarEuclidean = function(){
         let parThis = this;
         return aStar(parThis, paramGrid, "euclidean");
     }
+
     this.getNodesInPathOrder = getNodesInPathOrder;
     this.successfull = false;
 }
@@ -980,6 +1077,7 @@ function updateNeighborsAStar(node, grid) {
             filteredNeighbors.push(neighbor);
         }
     }
+
     return filteredNeighbors;
 }
 
@@ -1021,8 +1119,10 @@ let bidirectional = function(){
             this.updateUnvisitedNeighborsBackward(closestNodeBackward, grid);
         }
     }
+
     this.successfull = false;
     this.lastNode = null;
+
     this.getNodesInPathOrder = function(lastNode){
         const nodesInShortestPathOrder = [];
         let currentNode = this.lastNode;
@@ -1047,6 +1147,7 @@ let bidirectional = function(){
         }
         return nodesInShortestPathOrder;
     }
+
     this.setupGridBidirectional = function(grid){
         for(let row = 0; row < grid.height; row++){
             for(let col = 0; col < grid.width; col++) {
@@ -1061,20 +1162,25 @@ let bidirectional = function(){
             }
         }
     }
+
     this.sortNodesByForwardDistance = function(nodes){
         nodes.sort((nodeA, nodeB) => nodeA.forwardDistance - nodeB.forwardDistance);
     }
+
     this.sortNodesByBackwardDistance = function(nodes){
         nodes.sort((nodeA, nodeB) => nodeA.backwardDistance - nodeB.backwardDistance);
     }
+
     this.getUnvisitedNeighborsForward = function(node, grid){
         let neighbors = getNeighbors(node, grid);
         return neighbors.filter(neighbor => !neighbor.forwardVisited);
     }
+
     this.getUnvisitedNeighborsBackward = function(node, grid){
         let neighbors = getNeighbors(node, grid);
         return neighbors.filter(neighbor => !neighbor.backwardVisited);
     }
+
     this.updateUnvisitedNeighborsBackward = function(node, grid){
         const unvisitedNeighbors = this.getUnvisitedNeighborsBackward(node, grid);
         for(const neighbor of unvisitedNeighbors){
@@ -1083,6 +1189,7 @@ let bidirectional = function(){
             neighbor.backwardVisited = true;
         }
     }
+
     this.updateUnvisitedNeighborsForward = function(node, grid){
         const unvisitedNeighbors = this.getUnvisitedNeighborsForward(node, grid);
         for(const neighbor of unvisitedNeighbors){
@@ -1113,6 +1220,7 @@ Maze.prototype = {
 let recursiveDivision = function(){
     this.grid = null;
     this.wallNodes = [];
+
     this.calculateWallNodes = function(grid){
         this.grid = grid;
         if(this.grid.height % 2 === 1){
@@ -1137,6 +1245,7 @@ let recursiveDivision = function(){
         }
         return this.wallNodes;
     }
+
     this.divide = function(width, height, offSetX, offSetY) {
         if (width < 2 || height < 2){
             return;
@@ -1178,6 +1287,7 @@ let recursiveDivision = function(){
             this.divide(width - wallIdx + offSetX - 1, height, wallIdx + 1, offSetY);
         }
     }
+
     this.buildVerticalLine = function(startY, endY, x){
         for(let i = 0; i <= (endY - startY); i++){
             let currNode = this.grid.getNode(`${i + parseInt(startY)}-${parseInt(x)}`);
@@ -1185,6 +1295,7 @@ let recursiveDivision = function(){
             this.wallNodes.push(currNode);
         }
     }
+
     this.buildHorizontalLine = function(startX, endX, y){
         for(let i = 0; i <= (endX - startX); i++){
             let currNode = this.grid.getNode(`${parseInt(y)}-${i + parseInt(startX)}`);
@@ -1192,6 +1303,7 @@ let recursiveDivision = function(){
             this.wallNodes.push(currNode);
         }
     }
+
     this.buildWall = function(wallIdx, pathIdx, orientation, height, width, offsetX, offsetY){
         if(orientation === "horizontal"){
             for(let i = 0; i < width; i++){
@@ -1212,6 +1324,7 @@ let recursiveDivision = function(){
             }
         }
     }
+
     this.returnPossiblePathAndWall = function(orientation, width, height, offsetX, offsetY){
         let possible = [];
         if(orientation === "horizontal"){
@@ -1258,10 +1371,12 @@ let recursiveDivision = function(){
         }
         return possible.filter(array => array[1] % 2);
     }
+
     this.outOfBounce = function(x, y) {
         return this.grid.height <= y || this.grid.width <= x || x < 0 || y < 0;
 
     }
+
     this.isWall = function(x,y){
         return this.grid.getNode(`${parseInt(y)}-${parseInt(x)}`).type === "wall";
     }
