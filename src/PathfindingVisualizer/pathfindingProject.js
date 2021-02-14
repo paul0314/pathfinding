@@ -388,7 +388,7 @@ class Controller{
         let duration = wallNodes.length * 20 * this.speeds[`${this.currSpeed}`];
         setTimeout(() => {
             this.algoDone = true;
-            startBtn.style.backgroundColor = "limegreen";
+            startBtn.style.backgroundColor = "";
         }, duration);
         for(let i = 0; i < wallNodes.length; i++){
             setTimeout(() => {
@@ -493,7 +493,7 @@ class Controller{
         let duration = this.calculateAlgoDuration(visitedNodes, pathNodes);
         setTimeout(() => {
             this.algoDone = true;
-            startBtn.style.backgroundColor = "limegreen";
+            startBtn.style.backgroundColor = "";
         }, duration);
         this.animateVisitedNodes(visitedNodes);
         if(pathNodes.length > 1){
